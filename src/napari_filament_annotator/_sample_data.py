@@ -8,7 +8,6 @@ Replace code below according to your needs.
 """
 from __future__ import annotations
 
-import numpy
 from skimage import io
 
 

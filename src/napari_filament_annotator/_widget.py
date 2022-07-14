@@ -1,46 +1,62 @@
 """
-This module is an example of a barebones QWidget plugin for napari
-
-It implements the Widget specification.
-see: https://napari.org/plugins/guides.html?#widgets
-
-Replace code below according to your needs.
+3D Annotator Widget
 """
-from typing import TYPE_CHECKING
+import itertools
 
-from magicgui import magic_factory
-from qtpy.QtWidgets import QHBoxLayout, QPushButton, QWidget
+import napari
+import numpy as np
+from napari.utils.notifications import show_info
+from qtpy.QtWidgets import QVBoxLayout, QPushButton, QWidget, QMessageBox
 
-if TYPE_CHECKING:
-    import napari
 
-
-class ExampleQWidget(QWidget):
-    # your QWidget.__init__ can optionally request the napari viewer instance
-    # in one of two ways:
-    # 1. use a parameter called `napari_viewer`, as done here
-    # 2. use a type annotation of 'napari.viewer.Viewer' for any parameter
+class Annotator(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
         self.viewer = napari_viewer
+        self.annotation_layer = None
 
-        btn = QPushButton("Click me!")
-        btn.clicked.connect(self._on_click)
+        btn = QPushButton("Add annotation layer")
+        btn.clicked.connect(self.add_annotation_layer)
+        layout = QVBoxLayout()
+        layout.addWidget(btn)
 
-        self.setLayout(QHBoxLayout())
-        self.layout().addWidget(btn)
+        self.setLayout(layout)
 
-    def _on_click(self):
-        print("napari has", len(self.viewer.layers), "layers")
+    def add_annotation_layer(self):
+        """
+        Add an annotation layer to the napari viewer.
+        """
+        if len(self.viewer.layers) > 0 and isinstance(self.viewer.layers[0], napari.layers.Image):
+            if len(self.get_shape_layers()) > 0:
+                answer = self._confirm_adding_second_layer()
+                if answer == QMessageBox.No:
+                    return
+            shape = self.viewer.layers[0].data.shape
 
+            # add a bounding box to set the coordinates range
+            bbox = list(itertools.product(*[np.arange(2)
+                                            for i in range(len(shape[-3:]))]))
+            if len(shape) > 3:
+                bbox = [(0,) + b for b in bbox]
+            bbox = bbox * np.array(shape)
 
-@magic_factory
-def example_magic_widget(img_layer: "napari.layers.Image"):
-    print(f"you have selected {img_layer}")
+            self.annotation_layer = self.viewer.add_shapes(bbox,
+                                                           name='annotations',
+                                                           shape_type='path',
+                                                           edge_width=0,
+                                                           scale=self.viewer.layers[0].scale
+                                                           )
+        else:
+            show_info("No images open! Please open an image first")
 
+    def get_shape_layers(self):
+        return [layer for layer in self.viewer.layers if isinstance(layer, napari.layers.Shapes)]
 
-# Uses the `autogenerate: true` flag in the plugin manifest
-# to indicate it should be wrapped as a magicgui to autogenerate
-# a widget.
-def example_function_widget(img_layer: "napari.layers.Image"):
-    print(f"you have selected {img_layer}")
+    def _confirm_adding_second_layer(self):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Question)
+
+        msg.setWindowTitle("Annotation layer already exists")
+        msg.setText("Annotation layer already exists! Are you sure you want to add another annotation layer?")
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        return msg.exec_()

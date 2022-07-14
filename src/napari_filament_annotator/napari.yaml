@@ -11,31 +11,23 @@ contributions:
     - id: napari-filament-annotator.load_sample_image
       python_name: napari_filament_annotator._sample_data:load_sample_image
       title: Load sample data for napari 3D filament annotator
-    - id: napari-filament-annotator.make_qwidget
-      python_name: napari_filament_annotator._widget:ExampleQWidget
-      title: Make example QWidget
+    - id: napari-filament-annotator.make_annotator_widget
+      python_name: napari_filament_annotator._widget:Annotator
+      title: Make Annotator Widget
     - id: napari-filament-annotator.make_magic_widget
       python_name: napari_filament_annotator._widget:example_magic_widget
       title: Make example magic widget
-    - id: napari-filament-annotator.make_func_widget
-      python_name: napari_filament_annotator._widget:example_function_widget
-      title: Make example function widget
   writers:
     - command: napari-filament-annotator.write_multiple
-      layer_types: ['image*','labels*']
-      filename_extensions: []
+      layer_types: [ 'image*','labels*' ]
+      filename_extensions: [ ]
     - command: napari-filament-annotator.write_single_image
-      layer_types: ['image']
-      filename_extensions: ['.npy']
+      layer_types: [ 'image' ]
+      filename_extensions: [ '.npy' ]
   sample_data:
     - key: napari.sample_filament_image_3d
       display_name: Sample Image
       command: napari-filament-annotator.load_sample_image
   widgets:
-    - command: napari-filament-annotator.make_qwidget
-      display_name: Example QWidget
-    - command: napari-filament-annotator.make_magic_widget
-      display_name: Example Magic Widget
-    - command: napari-filament-annotator.make_func_widget
-      autogenerate: true
-      display_name: Example Function Widget
+    - command: napari-filament-annotator.make_annotator_widget
+      display_name: 3D Filament Annotator
