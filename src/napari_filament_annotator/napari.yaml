@@ -11,9 +11,9 @@ contributions:
     - id: napari-filament-annotator.write_single_image
       python_name: napari_filament_annotator._writer:write_single_image
       title: Save image data with napari 3D filament annotator
-    - id: napari-filament-annotator.make_sample_data
-      python_name: napari_filament_annotator._sample_data:make_sample_data
-      title: Load sample data from napari 3D filament annotator
+    - id: napari-filament-annotator.load_sample_image
+      python_name: napari_filament_annotator._sample_data:load_sample_image
+      title: Load sample data for napari 3D filament annotator
     - id: napari-filament-annotator.make_qwidget
       python_name: napari_filament_annotator._widget:ExampleQWidget
       title: Make example QWidget
@@ -35,9 +35,9 @@ contributions:
       layer_types: ['image']
       filename_extensions: ['.npy']
   sample_data:
-    - command: napari-filament-annotator.make_sample_data
-      display_name: napari 3D filament annotator
-      key: unique_id.1
+    - key: napari.sample_filament_image_3d
+      display_name: Sample Image
+      command: napari-filament-annotator.load_sample_image
   widgets:
     - command: napari-filament-annotator.make_qwidget
       display_name: Example QWidget
