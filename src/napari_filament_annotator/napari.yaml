@@ -1,0 +1,48 @@
+name: napari-filament-annotator
+display_name: napari 3D filament annotator
+contributions:
+  commands:
+    - id: napari-filament-annotator.get_reader
+      python_name: napari_filament_annotator._reader:napari_get_reader
+      title: Open data with napari 3D filament annotator
+    - id: napari-filament-annotator.write_multiple
+      python_name: napari_filament_annotator._writer:write_multiple
+      title: Save multi-layer data with napari 3D filament annotator
+    - id: napari-filament-annotator.write_single_image
+      python_name: napari_filament_annotator._writer:write_single_image
+      title: Save image data with napari 3D filament annotator
+    - id: napari-filament-annotator.make_sample_data
+      python_name: napari_filament_annotator._sample_data:make_sample_data
+      title: Load sample data from napari 3D filament annotator
+    - id: napari-filament-annotator.make_qwidget
+      python_name: napari_filament_annotator._widget:ExampleQWidget
+      title: Make example QWidget
+    - id: napari-filament-annotator.make_magic_widget
+      python_name: napari_filament_annotator._widget:example_magic_widget
+      title: Make example magic widget
+    - id: napari-filament-annotator.make_func_widget
+      python_name: napari_filament_annotator._widget:example_function_widget
+      title: Make example function widget
+  readers:
+    - command: napari-filament-annotator.get_reader
+      accepts_directories: false
+      filename_patterns: ['*.npy']
+  writers:
+    - command: napari-filament-annotator.write_multiple
+      layer_types: ['image*','labels*']
+      filename_extensions: []
+    - command: napari-filament-annotator.write_single_image
+      layer_types: ['image']
+      filename_extensions: ['.npy']
+  sample_data:
+    - command: napari-filament-annotator.make_sample_data
+      display_name: napari 3D filament annotator
+      key: unique_id.1
+  widgets:
+    - command: napari-filament-annotator.make_qwidget
+      display_name: Example QWidget
+    - command: napari-filament-annotator.make_magic_widget
+      display_name: Example Magic Widget
+    - command: napari-filament-annotator.make_func_widget
+      autogenerate: true
+      display_name: Example Function Widget
