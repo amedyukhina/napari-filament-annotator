@@ -2,9 +2,6 @@ name: napari-filament-annotator
 display_name: napari 3D filament annotator
 contributions:
   commands:
-    - id: napari-filament-annotator.get_reader
-      python_name: napari_filament_annotator._reader:napari_get_reader
-      title: Open data with napari 3D filament annotator
     - id: napari-filament-annotator.write_multiple
       python_name: napari_filament_annotator._writer:write_multiple
       title: Save multi-layer data with napari 3D filament annotator
@@ -23,10 +20,6 @@ contributions:
     - id: napari-filament-annotator.make_func_widget
       python_name: napari_filament_annotator._widget:example_function_widget
       title: Make example function widget
-  readers:
-    - command: napari-filament-annotator.get_reader
-      accepts_directories: false
-      filename_patterns: ['*.npy']
   writers:
     - command: napari-filament-annotator.write_multiple
       layer_types: ['image*','labels*']
