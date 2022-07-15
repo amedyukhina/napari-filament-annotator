@@ -1,19 +1,20 @@
 """
 3D Annotator Widget
 """
+import itertools
 
 import napari
+import numpy as np
 from napari.utils.notifications import show_info
 from qtpy.QtWidgets import QVBoxLayout, QPushButton, QWidget, QMessageBox
-
-from ._annotation import Annotation
+from ._annotation import annotate_filaments
 
 
 class Annotator(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
         self.viewer = napari_viewer
-        self.annotation = None
+        self.annotation_layer = None
 
         btn = QPushButton("Add annotation layer")
         btn.clicked.connect(self.add_annotation_layer)
@@ -32,8 +33,23 @@ class Annotator(QWidget):
                 if answer == QMessageBox.No:
                     return
 
-            self.annotation = Annotation(self.viewer, self.viewer.layers[0])
-            self.viewer = self.annotation.viewer
+            shape = self.viewer.layers[0].data.shape
+
+            # add a bounding box to set the coordinates range
+            bbox = list(itertools.product(*[np.arange(2)
+                                            for i in range(len(shape[-3:]))]))
+            if len(shape) > 3:
+                bbox = [(0,) + b for b in bbox]
+            bbox = bbox * np.array(shape)
+
+            self.annotation_layer = self.viewer.add_shapes(bbox,
+                                                           name='annotations',
+                                                           shape_type='path',
+                                                           edge_width=0,
+                                                           scale=self.viewer.layers[0].scale
+                                                           )
+            annotate_filaments(self.annotation_layer, image_layer=self.viewer.layers[0])
+
         else:
             show_info("No images open! Please open an image first")
 
