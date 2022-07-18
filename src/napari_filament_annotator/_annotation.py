@@ -5,38 +5,7 @@ from .utils.geom import compute_polygon_intersection
 from .utils.postproc import sort_points, snap_to_brightest
 
 
-def annotate_filaments(annotation_layer, output_fn=None, point_size=1,
-                       image_layer=None, sigma=2., neighborhood_radius=5, decay_sigma=5.):
-    """
-
-    Parameters
-    ----------
-    annotation_layer : napari layer
-        napari shapes layer to add annotations
-    output_fn : str
-        csv file to save filament coordinates
-    point_size : scalar
-        Point and line size for display.
-        Default is 1.
-    image_layer : napari layer, optional
-        napari image layer to use for snapping annotation points to the brightest neighborhood point.
-        Default is None.
-    sigma : scalar or sequence, optional
-        Gaussian sigma (pixels) to smooth the image for identifying the brightest neighborhood point.
-        Can be provided as a list of different values for each dimension.
-        Default is 2.
-    neighborhood_radius : int or sequence, optional
-        Radius of the neighborhood (in pixels) to consider for identifying the brightest points.
-        Can be provided as a list of values for different dimensions.
-        Default is 5.
-    decay_sigma : scalar or sequence, optional
-        Sigma of a Gaussian used to scale image intensities centered on the original annotated point.
-        This is done to give preference to the original point, if there are other points with the same intensity.
-        Default is 5.
-    Returns
-    -------
-
-    """
+def annotate_filaments(annotation_layer, params, output_fn=None, image_layer=None):
     near_points = []  # store near points of the currently drawn polygon
     far_points = []  # store far points of the currently drawn polygon
     polygons = []  # store near and far points of the last 1-2 polygons (to compute intersections)
@@ -53,7 +22,7 @@ def annotate_filaments(annotation_layer, output_fn=None, point_size=1,
 
     if image_layer is not None:
         img = image_layer.data.copy()
-        sigma = __convert_sigma(sigma, img.shape)
+        sigma = __convert_sigma(params.sigma, img.shape)
         img = ndimage.gaussian_filter(img, sigma=sigma)  # smooth the image
 
     @annotation_layer.mouse_drag_callbacks.append
@@ -77,7 +46,7 @@ def annotate_filaments(annotation_layer, output_fn=None, point_size=1,
 
             # draw a polygon from the array of near and far points
             if len(near_points) > 0 and len(far_points) > 0:
-                draw_polygon(layer, near_points.copy(), far_points.copy(), point_size=point_size)
+                draw_polygon(layer, near_points.copy(), far_points.copy(), line_width=params.line_width)
 
         yield
 
@@ -108,9 +77,11 @@ def annotate_filaments(annotation_layer, output_fn=None, point_size=1,
                         mt = np.array(mt)
                         if len(img.shape) > 3:
                             mt[:, 1:] = snap_to_brightest(mt[:, 1:], img=img[mt[0][0]],
-                                                          rad=neighborhood_radius, decay_sigma=decay_sigma)
+                                                          rad=params.neighborhood_radius,
+                                                          decay_sigma=params.decay_sigma)
                         else:
-                            mt = snap_to_brightest(mt, img=img, rad=neighborhood_radius, decay_sigma=decay_sigma)
+                            mt = snap_to_brightest(mt, img=img, rad=params.neighborhood_radius,
+                                                   decay_sigma=params.decay_sigma)
 
                     mt = sort_points(mt)  # make sure the filament coordinates are sorted
 
@@ -119,7 +90,7 @@ def annotate_filaments(annotation_layer, output_fn=None, point_size=1,
                     layer.remove_selected()
 
                     # add the calculated filament
-                    layer.add(mt, shape_type='path', edge_color='green', edge_width=point_size)
+                    layer.add(mt, shape_type='path', edge_color='green', edge_width=params.line_width)
 
                     # clear the polygons array
                     polygons.pop()
@@ -174,7 +145,7 @@ def annotate_filaments(annotation_layer, output_fn=None, point_size=1,
                 delete_the_last_shape(layer, show_message=False)
 
 
-def draw_polygon(layer, near_points: list, far_points: list, color: str = 'red', point_size=1):
+def draw_polygon(layer, near_points: list, far_points: list, color: str = 'red', line_width=1):
     """
     Draw a polygon between provided near and far points.
 
@@ -188,7 +159,7 @@ def draw_polygon(layer, near_points: list, far_points: list, color: str = 'red',
         List of polygon coordinates further from the viewer.
     color : str, optional
         Color of the polygon
-    point_size : scalar
+    line_width : scalar
         Point and line size for display.
         Default is 1.
 
@@ -197,8 +168,8 @@ def draw_polygon(layer, near_points: list, far_points: list, color: str = 'red',
     Updated shapes layer
     """
     if len(near_points) < 2:  # if only one point, add a temporary point for display purposes
-        near_points.append(np.array(near_points[0]) + point_size)
-        far_points.append(np.array(far_points[0]) + point_size)
+        near_points.append(np.array(near_points[0]) + line_width)
+        far_points.append(np.array(far_points[0]) + line_width)
 
     # reverse the far points and combine near and far points into a polygon
     far_points_reverse = far_points.copy()
@@ -214,7 +185,7 @@ def draw_polygon(layer, near_points: list, far_points: list, color: str = 'red',
     layer.add(
         polygon,
         shape_type='polygon',
-        edge_width=point_size,
+        edge_width=line_width,
         edge_color=color
     )
     return layer
