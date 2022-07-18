@@ -17,7 +17,7 @@ def test_example_q_widget(make_napari_viewer, capsys):
     assert len(annotator.get_shape_layers()) == 0
 
     # add an image
-    viewer.add_image(np.random.random((100, 100)))
+    viewer.add_image(np.random.random((10, 50, 50)))
 
     # call "add annotation layer" again and assert a new shape layer was added
     annotator.add_annotation_layer()
