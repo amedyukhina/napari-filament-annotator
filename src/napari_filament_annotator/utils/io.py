@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def annotation_to_pandas(data: list) -> pd.DataFrame:
+def annotation_to_pandas(data: list, col_name='id') -> pd.DataFrame:
     """
     Convert list of path to a pandas table with coordinates.
 
@@ -22,6 +22,6 @@ def annotation_to_pandas(data: list) -> pd.DataFrame:
         columns = columns[-data[0].shape[1]:]
         for i, d in enumerate(data):
             cur_df = pd.DataFrame(d, columns=columns)
-            cur_df['id'] = i
+            cur_df[col_name] = i
             df = pd.concat([df, cur_df], ignore_index=True)
     return df

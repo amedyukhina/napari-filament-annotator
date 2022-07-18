@@ -96,9 +96,6 @@ def annotate_filaments(annotation_layer, params, output_fn=None, image_layer=Non
                     polygons.pop()
                     polygons.pop()
 
-                    # save current annotations to a csv file
-                    # annotation_to_pandas(layer.data[1:]).to_csv(output_fn, index=False)
-
             yield
 
     @annotation_layer.bind_key('p')
@@ -126,9 +123,6 @@ def annotate_filaments(annotation_layer, params, output_fn=None, image_layer=Non
         if show_message:
             layer.status = msg
             print(msg)
-
-        # save updated annotations to a csv file
-        # annotation_to_pandas(layer.data[1:]).to_csv(output_fn, index=False)
 
     @annotation_layer.bind_key('d')
     def delete_the_last_point(layer):
