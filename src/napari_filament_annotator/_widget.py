@@ -17,18 +17,22 @@ from .utils.io import annotation_to_pandas
 
 
 class Params():
-    def __init__(self, scale, line_width=1, sigma_um=0.5, neighborhood_radius_um=0.8, decay_sigma_um=0.5):
+    def __init__(self, scale, line_width=1, sigma_um=0.5, neighborhood_radius_um=0.8,
+                 decay_sigma_um=0.5, dist_cost=10.):
         self.scale = np.array(scale)
         self.line_width = line_width
         self.sigma = sigma_um / self.scale
         self.neighborhood_radius = np.int_(np.round_(neighborhood_radius_um / self.scale))
         self.decay_sigma = decay_sigma_um / self.scale
+        self.dist_cost = dist_cost
 
-    def update_parameters(self, line_width=1, sigma_um=0.5, neighborhood_radius_um=0.8, decay_sigma_um=0.5):
+    def update_parameters(self, line_width=1, sigma_um=0.5, neighborhood_radius_um=0.8,
+                          decay_sigma_um=0.5, dist_cost=10.):
         self.line_width = line_width
         self.sigma = sigma_um / self.scale
         self.neighborhood_radius = np.int_(np.round_(neighborhood_radius_um / self.scale))
         self.decay_sigma = decay_sigma_um / self.scale
+        self.dist_cost = dist_cost
 
 
 class Annotator(QWidget):
@@ -105,7 +109,7 @@ class Annotator(QWidget):
         self.set_scale([voxel_size_z, voxel_size_xy, voxel_size_xy])
 
     def parameters(self, line_width: float = 1., sigma_um: float = 0.5,
-                   neighborhood_radius_um: float = 0.8, decay_sigma_um: float = 0.5):
+                   neighborhood_radius_um: float = 0.8, decay_sigma_um: float = 0.5, dist_cost: float = 10.):
         """
 
         Parameters
@@ -122,7 +126,8 @@ class Annotator(QWidget):
         """
 
         self.params.update_parameters(sigma_um=sigma_um, line_width=line_width,
-                                      neighborhood_radius_um=neighborhood_radius_um, decay_sigma_um=decay_sigma_um)
+                                      neighborhood_radius_um=neighborhood_radius_um,
+                                      decay_sigma_um=decay_sigma_um, dist_cost=dist_cost)
 
     def add_annotation_layer(self):
         """

@@ -1,5 +1,7 @@
 import numpy as np
 from Geometry3D import *
+from scipy.optimize import linear_sum_assignment
+from scipy.spatial.distance import cdist
 
 
 def tetragon_intersection(p1: list, p2: list):
@@ -37,39 +39,33 @@ def tetragon_intersection(p1: list, p2: list):
         return None
 
 
-def compute_polygon_intersection(npt1: np.ndarray, npt2: np.ndarray,
-                                 fpt1: np.ndarray, fpt2: np.ndarray):
-    """
-    Calculate intersection of two non-convex polygons represented by a list of near and far points.
-
-    Parameters
-    ----------
-    npt1 : np.ndarray
-        Near points of the first polygon.
-    npt2 : np.ndarray
-        Near points of the second polygon.
-    fpt1 : np.ndarray
-        Far points of the first polygon.
-    fpt2 : np.ndarray
-        Far points of the second polygon.
-    Returns
-    -------
-    np.ndarray:
-        n x d array of the intersections coordinates,
-        where n is the number of points, d is the number of dimensions.
-    """
+def compute_polygon_intersection(polygons, spacing):
+    npt1 = polygons[0][0]
+    npt2 = polygons[1][0]
+    fpt1 = polygons[0][1]
+    fpt2 = polygons[1][1]
     mt = []
 
+    intersections = []
+    mask = []
     for i in range(len(npt1) - 1):
         for j in range(len(npt2) - 1):
             p1 = [npt1[i], npt1[i + 1], fpt1[i + 1], fpt1[i]]
             p2 = [npt2[j], npt2[j + 1], fpt2[j + 1], fpt2[j]]
             inter = tetragon_intersection(p1, p2)
             if inter is not None:
-                if len(mt) == 0:
-                    mt = inter
-                else:
-                    mt = np.concatenate([mt, inter], axis=0)
-
-    mt = np.array(list(set([tuple(np.round(mt[i], 1)) for i in range(len(mt))])))
+                intersections.append(inter)
+                mask.append(1)
+            else:
+                intersections.append(np.ones([2, 3]) * -1)
+                mask.append(0)
+    intersections = np.array(intersections).reshape(len(npt1) - 1, len(npt2) - 1, 2, 3)
+    l = np.sqrt(np.sum((intersections[:, :, 0] - intersections[:, :, 1]) ** 2, -1))
+    inds = linear_sum_assignment(l, maximize=True)
+    mt = intersections[inds[0], inds[1]]
+    mtcenter = [(mt[i][0] + mt[i][1]) / 2 for i in range(1, len(mt) - 1)]
+    mt = np.array(mt).reshape(-1, 3)
+    dist = cdist(mt * spacing, mt * spacing)
+    ind = np.where(dist == dist.max())[0]
+    mt = np.array([mt[ind[0]]] + mtcenter + [mt[ind[1]]])
     return mt
