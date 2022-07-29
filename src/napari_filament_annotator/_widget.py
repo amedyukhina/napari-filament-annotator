@@ -17,22 +17,22 @@ from .utils.io import annotation_to_pandas
 
 
 class Params():
-    def __init__(self, scale, line_width=1, sigma_um=0.5, neighborhood_radius_um=0.8,
-                 decay_sigma_um=0.5, dist_cost=10.):
+    def __init__(self, scale, line_width=1, sigma_um=0.5, alpha=0.01, beta=0.1, gamma=1, n_iter=100):
         self.scale = np.array(scale)
         self.line_width = line_width
         self.sigma = sigma_um / self.scale
-        self.neighborhood_radius = np.int_(np.round_(neighborhood_radius_um / self.scale))
-        self.decay_sigma = decay_sigma_um / self.scale
-        self.dist_cost = dist_cost
+        self.alpha = alpha
+        self.beta = beta
+        self.gamma = gamma
+        self.n_iter = n_iter
 
-    def update_parameters(self, line_width=1, sigma_um=0.5, neighborhood_radius_um=0.8,
-                          decay_sigma_um=0.5, dist_cost=10.):
+    def update_parameters(self, line_width=1, sigma_um=0.5, alpha=0.01, beta=0.1, gamma=1, n_iter=100):
         self.line_width = line_width
         self.sigma = sigma_um / self.scale
-        self.neighborhood_radius = np.int_(np.round_(neighborhood_radius_um / self.scale))
-        self.decay_sigma = decay_sigma_um / self.scale
-        self.dist_cost = dist_cost
+        self.alpha = alpha
+        self.beta = beta
+        self.gamma = gamma
+        self.n_iter = n_iter
 
 
 class Annotator(QWidget):
@@ -109,7 +109,7 @@ class Annotator(QWidget):
         self.set_scale([voxel_size_z, voxel_size_xy, voxel_size_xy])
 
     def parameters(self, line_width: float = 1., sigma_um: float = 0.5,
-                   neighborhood_radius_um: float = 0.8, decay_sigma_um: float = 0.5, dist_cost: float = 10.):
+                   alpha=0.01, beta=0.1, gamma=1, n_iter=100):
         """
 
         Parameters
@@ -118,16 +118,19 @@ class Annotator(QWidget):
             Width of the annotation lines in the viewer.
         sigma_um : flaot
             Gaussian sigma (in microns) to smooth the image for identifying the brightest neighborhood point.
-        neighborhood_radius_um : float
-            Radius of the neighborhood (in microns) to consider for identifying the brightest points.
-        decay_sigma_um : float
-            Sigma of a Gaussian (in microns) used to scale image intensities centered on the original annotated point.
-            This is done to give preference to the original point, if there are other points with the same intensity.
+        alpha : float
+            Active contour weight for the first derivative
+        beta : float
+            Active contour weight for the seconf derivative
+        gamma : float
+            Active contour weight for the image contribution
+        n_iter : int
+            Number of iterations of the active contour
+
         """
 
         self.params.update_parameters(sigma_um=sigma_um, line_width=line_width,
-                                      neighborhood_radius_um=neighborhood_radius_um,
-                                      decay_sigma_um=decay_sigma_um, dist_cost=dist_cost)
+                                      alpha=alpha, beta=beta, gamma=gamma, n_iter=n_iter)
 
     def add_annotation_layer(self):
         """

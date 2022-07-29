@@ -1,6 +1,8 @@
 import numpy as np
+from scipy import ndimage
 
 from .utils.geom import compute_polygon_intersection
+from .utils.postproc import active_contour
 
 
 def annotate_filaments(annotation_layer, params, output_fn=None, image_layer=None):
@@ -20,8 +22,8 @@ def annotate_filaments(annotation_layer, params, output_fn=None, image_layer=Non
 
     if image_layer is not None:
         img = image_layer.data.copy()
-        # sigma = __convert_sigma(params.sigma, img.shape)
-        # img = ndimage.gaussian_filter(img, sigma=sigma)  # smooth the image
+        sigma = __convert_sigma(params.sigma, img.shape)
+        img = ndimage.gaussian_filter(img, sigma=sigma)  # smooth the image
 
     @annotation_layer.mouse_drag_callbacks.append
     def draw_polygon_shape(layer, event):
@@ -65,17 +67,8 @@ def annotate_filaments(annotation_layer, params, output_fn=None, image_layer=Non
                 # if there are 2 or more polygons, calculate their intersection
                 if len(polygons) >= 2:
                     mt = compute_polygon_intersection(polygons, layer.scale)
-
-                    # # snap to the brightest point
-                    # if image_layer is not None:
-                    #     mt = np.array(mt)
-                    #     if len(img.shape) > 3:
-                    #         mt[:, 1:] = snap_to_brightest(mt[:, 1:], img=img[mt[0][0]],
-                    #                                       rad=params.neighborhood_radius,
-                    #                                       decay_sigma=params.decay_sigma)
-                    #     else:
-                    #         mt = snap_to_brightest(mt, img=img, rad=params.neighborhood_radius,
-                    #                                decay_sigma=params.decay_sigma)
+                    mt = active_contour(img, mt, alpha=params.alpha, beta=params.beta, gamma=params.gamma,
+                                        n_iter=params.n_iter, spacing=layer.scale)
 
                     # remove the 2 polygons from the shapes layer
                     layer.selected_data = set(range(layer.nshapes - 2, layer.nshapes))

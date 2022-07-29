@@ -3,8 +3,36 @@ from typing import Union
 import networkx as nx
 import numpy as np
 from scipy import ndimage
+from skimage.filters import sobel
 from skimage.restoration import ellipsoid_kernel
 from sklearn.neighbors import NearestNeighbors
+
+
+def get_derivatives(x):
+    x = np.concatenate([x[:2][::-1], x, x[-2:][::-1]])
+    d2 = np.roll(x, 1, 0) + np.roll(x, -1, 0) - 2 * x
+    d4 = np.roll(x, 2, 0) - 4 * np.roll(x, 1, 0) + 6 * x - 4 * np.roll(x, -1, 0) + np.roll(x, -2, 0)
+    return d2[2:-2], d4[2:-2]
+
+
+def active_contour(img, snake, spacing=None, alpha=0.01, beta=0.1, gamma=1, n_iter=1000):
+    if spacing is None:
+        spacing = np.ones(img.ndim)
+    grad = [sobel(img, axis=i) / spacing[i] for i in range(img.ndim)]
+    for it in range(n_iter):
+        coord = tuple(np.int_(np.round_(snake)).transpose())
+        d2, d4 = get_derivatives(snake * spacing)
+        fimg = np.array([grad[i][coord] for i in range(len(grad))])
+        fimg = fimg / np.max(abs(fimg))
+        fimg = - fimg.transpose()
+
+        fsnake = d2 * 0 + d4 * beta
+        fsnake = fsnake / np.max(abs(fsnake))
+        force = fimg * gamma + fsnake
+        force = force / np.max(abs(force))
+
+        snake[1:-1] = snake[1:-1] - force[1:-1]
+    return snake
 
 
 def __gaussian_kernel(sigma, shape):
