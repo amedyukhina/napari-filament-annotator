@@ -31,18 +31,19 @@ def active_contour(snake, img=None, grad=None, spacing=None, alpha=0.01, beta=0.
             raise ValueError("Either image or gradient must be provided!")
         if spacing is None:
             spacing = np.ones(img.ndim)
-        grad = [sobel(img, axis=i) / spacing[i] for i in range(img.ndim)]
+        grad = gradient(img, spacing)
+
+    c = np.arange(1, n_iter + 1)[::-1] / n_iter
 
     for it in range(n_iter):
         coord = tuple(np.int_(np.round_(snake)).transpose())
         fimg = np.array([grad[i][coord] for i in range(len(grad))])
         fimg = - fimg.transpose()
+        fimg = fimg / fimg.max()
 
-        d2, d4 = get_derivatives(snake * spacing / spacing[0])
+        d2, d4 = get_derivatives(snake * spacing)
+        fsnake = d2 * alpha + d4 * beta
+        fsnake = fsnake / np.max(fsnake)
 
-        force = (d2 * alpha + d4 * beta + fimg * gamma) / (alpha + beta + gamma)
-        if np.max(force) > 2:
-            force = force * 2 / np.max(force)
-
-        snake[1:-1] = snake[1:-1] - force[1:-1]
+        snake[1:-1] = snake[1:-1] - c[it] * (fimg[1:-1] * gamma + fsnake[1:-1]) / (gamma + 1)
     return snake
