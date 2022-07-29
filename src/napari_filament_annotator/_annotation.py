@@ -2,7 +2,7 @@ import numpy as np
 from scipy import ndimage
 
 from .utils.geom import compute_polygon_intersection
-from .utils.postproc import active_contour
+from .utils.postproc import active_contour, interpolate, gradient
 
 
 def annotate_filaments(annotation_layer, params, output_fn=None, image_layer=None):
@@ -24,6 +24,7 @@ def annotate_filaments(annotation_layer, params, output_fn=None, image_layer=Non
         img = image_layer.data.copy()
         sigma = __convert_sigma(params.sigma, img.shape)
         img = ndimage.gaussian_filter(img, sigma=sigma)  # smooth the image
+        grad = gradient(img, annotation_layer.scale)
 
     @annotation_layer.mouse_drag_callbacks.append
     def draw_polygon_shape(layer, event):
@@ -67,8 +68,11 @@ def annotate_filaments(annotation_layer, params, output_fn=None, image_layer=Non
                 # if there are 2 or more polygons, calculate their intersection
                 if len(polygons) >= 2:
                     mt = compute_polygon_intersection(polygons, layer.scale)
-                    mt = active_contour(img, mt, alpha=params.alpha, beta=params.beta, gamma=params.gamma,
-                                        n_iter=params.n_iter, spacing=layer.scale)
+                    if image_layer is not None:
+                        mt = interpolate(mt, npoints=params.n_interp)
+                        mt = active_contour(snake=mt, grad=grad,
+                                            alpha=params.alpha, beta=params.beta, gamma=params.gamma,
+                                            n_iter=params.n_iter, spacing=layer.scale)
 
                     # remove the 2 polygons from the shapes layer
                     layer.selected_data = set(range(layer.nshapes - 2, layer.nshapes))

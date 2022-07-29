@@ -17,7 +17,7 @@ from .utils.io import annotation_to_pandas
 
 
 class Params():
-    def __init__(self, scale, line_width=1, sigma_um=0.5, alpha=0.01, beta=0.1, gamma=1, n_iter=100):
+    def __init__(self, scale, line_width=0.2, sigma_um=0.5, alpha=0.01, beta=0.1, gamma=1, n_iter=100, n_interp=5):
         self.scale = np.array(scale)
         self.line_width = line_width
         self.sigma = sigma_um / self.scale
@@ -25,14 +25,16 @@ class Params():
         self.beta = beta
         self.gamma = gamma
         self.n_iter = n_iter
+        self.n_interp = n_interp
 
-    def update_parameters(self, line_width=1, sigma_um=0.5, alpha=0.01, beta=0.1, gamma=1, n_iter=100):
+    def update_parameters(self, line_width=0.2, sigma_um=0.5, alpha=0.01, beta=0.1, gamma=1, n_iter=100, n_interp=5):
         self.line_width = line_width
         self.sigma = sigma_um / self.scale
         self.alpha = alpha
         self.beta = beta
         self.gamma = gamma
         self.n_iter = n_iter
+        self.n_interp = n_interp
 
 
 class Annotator(QWidget):
@@ -95,7 +97,7 @@ class Annotator(QWidget):
             self.viewer.dims.ndisplay = 2
             self.viewer.dims.ndisplay = 3
 
-    def scale_params(self, voxel_size_xy: float = 0.1, voxel_size_z: float = 0.2):
+    def scale_params(self, voxel_size_xy: float = 1., voxel_size_z: float = 1.):
         """
         Specify voxel size.
 
@@ -108,8 +110,9 @@ class Annotator(QWidget):
         """
         self.set_scale([voxel_size_z, voxel_size_xy, voxel_size_xy])
 
-    def parameters(self, line_width: float = 1., sigma_um: float = 0.5,
-                   alpha=0.01, beta=0.1, gamma=1, n_iter=100):
+    def parameters(self, line_width: float = 0.2, sigma_um: float = 0.5,
+                   alpha: float = 0.01, beta: float = 0.1, gamma: float = 1,
+                   n_iter: int = 100, n_interp: int = 5):
         """
 
         Parameters
@@ -126,11 +129,13 @@ class Annotator(QWidget):
             Active contour weight for the image contribution
         n_iter : int
             Number of iterations of the active contour
+        n_interp : int
+            Number of points to interpolate between each annotated point
 
         """
 
         self.params.update_parameters(sigma_um=sigma_um, line_width=line_width,
-                                      alpha=alpha, beta=beta, gamma=gamma, n_iter=n_iter)
+                                      alpha=alpha, beta=beta, gamma=gamma, n_iter=n_iter, n_interp=n_interp)
 
     def add_annotation_layer(self):
         """
@@ -155,7 +160,8 @@ class Annotator(QWidget):
                                                            name='annotations',
                                                            shape_type='path',
                                                            edge_width=0,
-                                                           scale=self.viewer.layers[0].scale
+                                                           scale=self.viewer.layers[0].scale,
+                                                           blending='additive'
                                                            )
             annotate_filaments(self.annotation_layer, params=self.params,
                                image_layer=self.viewer.layers[0])
