@@ -10,12 +10,15 @@ def gradient(img, spacing=None):
 
 
 def interpolate(x, npoints=5):
-    new_x = []
-    for i in range(1, len(x)):
-        new_x.append(np.linspace(x[i - 1], x[i], npoints, endpoint=False))
-    new_x.append(x[-1:])
-    new_x = np.concatenate(new_x, axis=0)
-    return new_x
+    if npoints > 1:
+        new_x = []
+        for i in range(1, len(x)):
+            new_x.append(np.linspace(x[i - 1], x[i], npoints, endpoint=False))
+        new_x.append(x[-1:])
+        new_x = np.concatenate(new_x, axis=0)
+        return new_x
+    else:
+        return x
 
 
 def get_derivatives(x):
