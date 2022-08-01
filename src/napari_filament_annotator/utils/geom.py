@@ -47,7 +47,6 @@ def compute_polygon_intersection(polygons, spacing):
     mt = []
 
     intersections = []
-    mask = []
     for i in range(len(npt1) - 1):
         for j in range(len(npt2) - 1):
             p1 = [npt1[i], npt1[i + 1], fpt1[i + 1], fpt1[i]]
@@ -55,14 +54,13 @@ def compute_polygon_intersection(polygons, spacing):
             inter = tetragon_intersection(p1, p2)
             if inter is not None:
                 intersections.append(inter)
-                mask.append(1)
             else:
                 intersections.append(np.ones([2, 3]) * -1)
-                mask.append(0)
     intersections = np.array(intersections).reshape(len(npt1) - 1, len(npt2) - 1, 2, 3)
     l = np.sqrt(np.sum((intersections[:, :, 0] - intersections[:, :, 1]) ** 2, -1))
     inds = linear_sum_assignment(l, maximize=True)
     mt = intersections[inds[0], inds[1]]
+    mt = np.array([m for m in mt if np.min(m) >= 0])
     mtcenter = [(mt[i][0] + mt[i][1]) / 2 for i in range(1, len(mt) - 1)]
     mt = np.array(mt).reshape(-1, 3)
     dist = cdist(mt * spacing, mt * spacing)
