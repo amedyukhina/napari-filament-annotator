@@ -72,7 +72,7 @@ def annotate_filaments(annotation_layer, params, output_fn=None, image_layer=Non
                         mt = interpolate(mt, npoints=params.n_interp)
                         mt = active_contour(snake=mt, grad=grad,
                                             alpha=params.alpha, beta=params.beta, gamma=params.gamma,
-                                            n_iter=params.n_iter, spacing=layer.scale)
+                                            n_iter=params.n_iter, spacing=layer.scale, end_coef=params.end_coef)
 
                     # remove the 2 polygons from the shapes layer
                     layer.selected_data = set(range(layer.nshapes - 2, layer.nshapes))

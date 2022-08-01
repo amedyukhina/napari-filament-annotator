@@ -22,13 +22,14 @@ def interpolate(x, npoints=5):
 
 
 def get_derivatives(x):
-    x = np.concatenate([x[:1], x[:1], x, x[-1:], x[-1:]])
+    # x = np.concatenate([x[:1], x[:1], x, x[-1:], x[-1:]])
+    x = np.concatenate([x[1:3][::-1], x, x[-3:-1][::-1]])
     d2 = np.roll(x, 1, 0) + np.roll(x, -1, 0) - 2 * x
     d4 = np.roll(x, 2, 0) - 4 * np.roll(x, 1, 0) + 6 * x - 4 * np.roll(x, -1, 0) + np.roll(x, -2, 0)
     return d2[2:-2], d4[2:-2]
 
 
-def active_contour(snake, img=None, grad=None, spacing=None, alpha=0.01, beta=0.1, gamma=1, n_iter=1000):
+def active_contour(snake, img=None, grad=None, spacing=None, alpha=0.01, beta=0.1, gamma=1, n_iter=1000, end_coef=0.01):
     if grad is None:
         if img is None:
             raise ValueError("Either image or gradient must be provided!")
@@ -37,6 +38,10 @@ def active_contour(snake, img=None, grad=None, spacing=None, alpha=0.01, beta=0.
         grad = gradient(img, spacing)
 
     c = np.arange(1, n_iter + 1)[::-1] / n_iter
+
+    coef = np.ones_like(snake)
+    coef[0] = end_coef
+    coef[-1] = end_coef
 
     for it in range(n_iter):
         coord = tuple(np.int_(np.round_(snake)).transpose())
@@ -48,5 +53,6 @@ def active_contour(snake, img=None, grad=None, spacing=None, alpha=0.01, beta=0.
         fsnake = d2 * alpha + d4 * beta
         fsnake = fsnake / np.max(fsnake)
 
-        snake[1:-1] = snake[1:-1] - c[it] * (fimg[1:-1] * gamma + fsnake[1:-1]) / (gamma + 1)
+        # snake[1:-1] = snake[1:-1] - c[it] * (fimg[1:-1] * gamma + fsnake[1:-1]) / (gamma + 1)
+        snake = snake - c[it] * coef * (fimg * gamma + fsnake) / (gamma + 1)
     return snake
