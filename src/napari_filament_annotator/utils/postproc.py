@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import ndimage
 from skimage.filters import sobel
 
 
@@ -22,26 +23,39 @@ def interpolate(x, npoints=5):
 
 
 def get_derivatives(x):
-    # x = np.concatenate([x[:1], x[:1], x, x[-1:], x[-1:]])
     x = np.concatenate([x[1:3][::-1], x, x[-3:-1][::-1]])
     d2 = np.roll(x, 1, 0) + np.roll(x, -1, 0) - 2 * x
     d4 = np.roll(x, 2, 0) - 4 * np.roll(x, 1, 0) + 6 * x - 4 * np.roll(x, -1, 0) + np.roll(x, -2, 0)
     return d2[2:-2], d4[2:-2]
 
 
-def active_contour(snake, img=None, grad=None, spacing=None, alpha=0.01, beta=0.1, gamma=1, n_iter=1000, end_coef=0.01):
-    if grad is None:
-        if img is None:
-            raise ValueError("Either image or gradient must be provided!")
-        if spacing is None:
-            spacing = np.ones(img.ndim)
-        grad = gradient(img, spacing)
+def get_neighborhood_mask(img, snake, rad, sigma, start, end):
+    img0 = img[tuple([slice(max(s, 0), e) for s, e in zip(start, end)])].astype(np.float32)
+    imgf = np.zeros_like(img0)
+    coords = np.int_(np.round_(snake - start))
+    thr = np.median(img0[tuple(coords.transpose())]) * 3
+    for coord in coords:
+        cur_rad = rad if img0[tuple(coord)] < thr else [1, 3, 3]
+        ind = tuple([slice(c - r, c + r + 1) for c, r in zip(coord, cur_rad)])
+        imgf[ind] = img0[ind]
+    imgf = ndimage.gaussian_filter(imgf, sigma=sigma)  # smooth the image
+    return imgf
+
+
+def active_contour(snake, img=None, spacing=None, sigma=0.1, rad=0.3,
+                   alpha=0.01, beta=0.1, gamma=1, n_iter=1000, end_coef=0.01):
+    start = np.int_(snake.min(0)) - rad
+    end = np.int_(snake.max(0) + 1) + rad + 1
+    imgf = get_neighborhood_mask(img, snake, rad, sigma, start, end)
+    grad = gradient(imgf, spacing)
 
     c = np.arange(1, n_iter + 1)[::-1] / n_iter
 
     coef = np.ones_like(snake)
     coef[0] = end_coef
     coef[-1] = end_coef
+
+    snake = snake - start
 
     for it in range(n_iter):
         coord = tuple(np.int_(np.round_(snake)).transpose())
@@ -55,4 +69,4 @@ def active_contour(snake, img=None, grad=None, spacing=None, alpha=0.01, beta=0.
 
         # snake[1:-1] = snake[1:-1] - c[it] * (fimg[1:-1] * gamma + fsnake[1:-1]) / (gamma + 1)
         snake = snake - c[it] * coef * (fimg * gamma + fsnake) / (gamma + 1)
-    return snake
+    return snake + start

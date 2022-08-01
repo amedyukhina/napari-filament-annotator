@@ -1,8 +1,7 @@
 import numpy as np
-from scipy import ndimage
 
 from .utils.geom import compute_polygon_intersection
-from .utils.postproc import active_contour, interpolate, gradient
+from .utils.postproc import active_contour, interpolate
 
 
 def annotate_filaments(annotation_layer, params, output_fn=None, image_layer=None):
@@ -10,21 +9,6 @@ def annotate_filaments(annotation_layer, params, output_fn=None, image_layer=Non
     far_points = []  # store far points of the currently drawn polygon
     polygons = []  # store near and far points of the last 1-2 polygons (to compute intersections)
     img = None
-
-    def __convert_sigma(sigma, shape):
-        """Convert the sigma value to fit the image shape"""
-        sigma = np.ravel(sigma)
-        if len(sigma) < 3:
-            sigma = [sigma[0]] * 3
-        if len(shape) > 3:
-            sigma = [0] * (len(shape) - len(sigma)) + sigma
-        return sigma
-
-    if image_layer is not None:
-        img = image_layer.data.copy()
-        sigma = __convert_sigma(params.sigma, img.shape)
-        img = ndimage.gaussian_filter(img, sigma=sigma)  # smooth the image
-        grad = gradient(img, annotation_layer.scale)
 
     @annotation_layer.mouse_drag_callbacks.append
     def draw_polygon_shape(layer, event):
@@ -70,7 +54,7 @@ def annotate_filaments(annotation_layer, params, output_fn=None, image_layer=Non
                     mt = compute_polygon_intersection(polygons, layer.scale)
                     if image_layer is not None:
                         mt = interpolate(mt, npoints=params.n_interp)
-                        mt = active_contour(snake=mt, grad=grad,
+                        mt = active_contour(snake=mt, img=image_layer.data.copy(), sigma=params.sigma, rad=params.rad,
                                             alpha=params.alpha, beta=params.beta, gamma=params.gamma,
                                             n_iter=params.n_iter, spacing=layer.scale, end_coef=params.end_coef)
 

@@ -8,7 +8,6 @@ import napari
 import numpy as np
 import pandas as pd
 from magicgui import magicgui
-from magicgui.widgets import Container
 from napari.utils.notifications import show_info
 from qtpy.QtWidgets import QVBoxLayout, QPushButton, QWidget, QMessageBox, QLabel
 
@@ -21,8 +20,9 @@ class Params():
     def set_scale(self, scale):
         self.scale = np.array(scale)
 
-    def set_sigma(self, sigma_um):
+    def set_smoothing(self, sigma_um, neighb_rad):
         self.sigma = sigma_um / self.scale
+        self.rad = np.int_(np.round_(neighb_rad / self.scale))
 
     def set_linewidth(self, line_width):
         self.line_width = line_width
@@ -76,7 +76,8 @@ class Annotator(QWidget):
         # File dialog
         layout.addWidget(QLabel("Output file"))
         self.add_magic_function(magicgui(self.annotation_filename, layout='vertical', auto_call=True,
-                           filename={"mode": "w", "label": "Choose output CSV file:", "filter": "*.csv"}), layout)
+                                         filename={"mode": "w", "label": "Choose output CSV file:", "filter": "*.csv"}),
+                                layout)
         btn_save = QPushButton("Save annotations")
         btn_save.clicked.connect(self.save_annotations)
         layout.addWidget(btn_save)
@@ -94,7 +95,7 @@ class Annotator(QWidget):
             self.viewer.dims.ndisplay = 2
             self.viewer.dims.ndisplay = 3
 
-    def image_params(self, voxel_size_xy: float = 0.035, voxel_size_z: float = 0.140, sigma_um: float = 0.050):
+    def image_params(self, voxel_size_xy: float = 0.035, voxel_size_z: float = 0.140):
         """
         Specify voxel size.
 
@@ -104,12 +105,9 @@ class Annotator(QWidget):
             Voxel size in xy (microns)
         voxel_size_z : float
             Voxel size in z (microns)
-        sigma_um : flaot
-            Gaussian sigma (in microns) to smooth the image for identifying the brightest neighborhood point.
         """
         self.set_scale([voxel_size_z, voxel_size_xy, voxel_size_xy])
         self.params.set_scale(self.scale)
-        self.params.set_sigma(sigma_um)
 
     def display_params(self, line_width: float = 0.5):
         """
@@ -121,12 +119,17 @@ class Annotator(QWidget):
         """
         self.params.set_linewidth(line_width)
 
-    def ac_parameters(self, n_iter: int = 1000, alpha: float = 0.01, beta: float = 0.1, gamma: float = 1,
-                   n_interp: int = 3, end_coef: float = 0.0):
+    def ac_parameters(self, sigma_um: float = 0.050, neighb_rad_um: float = 0.3,
+                      n_iter: int = 1000, alpha: float = 0.01, beta: float = 0.1, gamma: float = 1,
+                      n_interp: int = 3, end_coef: float = 0.0):
         """
 
         Parameters
         ----------
+        sigma_um : flaot
+            Gaussian sigma (in microns) to smooth the image for identifying the brightest neighborhood point.
+        neighb_rad_um : float
+            Neighborhood radius (in microns), in which to perform active contour fitting.
         n_iter : int
             Number of iterations of the active contour
             Width of the annotation lines in the viewer.
@@ -142,7 +145,7 @@ class Annotator(QWidget):
             Coefficient (between 0 and 1) to scale the forces applied to the contour end points.
             Set to 0 to fix the end points.
         """
-
+        self.params.set_smoothing(sigma_um, neighb_rad_um)
         self.params.set_ac_parameters(alpha=alpha, beta=beta, gamma=gamma, n_iter=n_iter, n_interp=n_interp,
                                       end_coef=end_coef)
 
