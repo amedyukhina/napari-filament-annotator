@@ -42,8 +42,40 @@ def get_neighborhood_mask(img, snake, rad, sigma, start, end):
     return imgf
 
 
-def active_contour(snake, img=None, spacing=None, sigma=0.1, rad=0.3,
-                   alpha=0.01, beta=0.1, gamma=1, n_iter=1000, end_coef=0.01):
+def evolve_snake(snake, n_iter, grad, spacing, alpha, beta, gamma, end_coef):
+    coef = np.ones_like(snake)
+    coef[0] = end_coef
+    coef[-1] = end_coef
+    c = np.arange(1, n_iter + 1)[::-1] / n_iter
+    for it in range(n_iter):
+        coord = tuple(np.int_(np.round_(snake)).transpose())
+        fimg = np.array([grad[i][coord] for i in range(len(grad))])
+        fimg = - fimg.transpose()
+        fimg = fimg / fimg.max()
+
+        d2, d4 = get_derivatives(snake * spacing)
+        fsnake = d2 * alpha + d4 * beta
+        fsnake = fsnake / np.max(fsnake)
+
+        snake = snake - c[it] * coef * (fimg * gamma + fsnake) / (gamma + 1)
+    return snake
+
+
+def active_contour(snake, img=None, grad=None, spacing=None, alpha=0.01, beta=0.1, gamma=1, n_iter=1000, end_coef=0.01):
+    if grad is None:
+        if img is None:
+            raise ValueError("Either image or gradient must be provided!")
+        if spacing is None:
+            spacing = np.ones(img.ndim)
+        grad = gradient(img, spacing)
+
+    snake = evolve_snake(snake, n_iter, grad, spacing, alpha, beta, gamma, end_coef)
+
+    return snake
+
+
+def active_contour_local(snake, img=None, spacing=None, sigma=0.1, rad=0.3,
+                         alpha=0.01, beta=0.1, gamma=1, n_iter=1000, end_coef=0.01):
     start = np.int_(snake.min(0)) - rad
     end = np.int_(snake.max(0) + 1) + rad + 1
     imgf = get_neighborhood_mask(img, snake, rad, sigma, start, end)
@@ -55,18 +87,5 @@ def active_contour(snake, img=None, spacing=None, sigma=0.1, rad=0.3,
     coef[0] = end_coef
     coef[-1] = end_coef
 
-    snake = snake - start
-
-    for it in range(n_iter):
-        coord = tuple(np.int_(np.round_(snake)).transpose())
-        fimg = np.array([grad[i][coord] for i in range(len(grad))])
-        fimg = - fimg.transpose()
-        fimg = fimg / fimg.max()
-
-        d2, d4 = get_derivatives(snake * spacing)
-        fsnake = d2 * alpha + d4 * beta
-        fsnake = fsnake / np.max(fsnake)
-
-        # snake[1:-1] = snake[1:-1] - c[it] * (fimg[1:-1] * gamma + fsnake[1:-1]) / (gamma + 1)
-        snake = snake - c[it] * coef * (fimg * gamma + fsnake) / (gamma + 1)
-    return snake + start
+    snake = evolve_snake(snake - start, n_iter, grad, spacing, alpha, beta, gamma, end_coef) + start
+    return snake

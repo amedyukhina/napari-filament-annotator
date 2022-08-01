@@ -1,14 +1,17 @@
 import numpy as np
+from scipy import ndimage
 
 from .utils.geom import compute_polygon_intersection
-from .utils.postproc import active_contour, interpolate
+from .utils.postproc import active_contour, interpolate, gradient
 
 
 def annotate_filaments(annotation_layer, params, output_fn=None, image_layer=None):
     near_points = []  # store near points of the currently drawn polygon
     far_points = []  # store far points of the currently drawn polygon
     polygons = []  # store near and far points of the last 1-2 polygons (to compute intersections)
-    img = None
+    img = image_layer.data.copy().astype(np.float32)
+    img = ndimage.gaussian_filter(img, sigma=params.sigma)
+    grad = gradient(img, image_layer.scale)
 
     @annotation_layer.mouse_drag_callbacks.append
     def draw_polygon_shape(layer, event):
@@ -54,9 +57,13 @@ def annotate_filaments(annotation_layer, params, output_fn=None, image_layer=Non
                     mt = compute_polygon_intersection(polygons, layer.scale)
                     if image_layer is not None:
                         mt = interpolate(mt, npoints=params.n_interp)
-                        mt = active_contour(snake=mt, img=image_layer.data.copy(), sigma=params.sigma, rad=params.rad,
+                        # mt = active_contour_local(snake=mt, img=image_layer.data.copy(), sigma=params.sigma,
+                        #                           rad=params.rad, spacing=layer.scale,
+                        #                           alpha=params.alpha, beta=params.beta, gamma=params.gamma,
+                        #                           n_iter=params.n_iter, end_coef=params.end_coef)
+                        mt = active_contour(snake=mt, grad=grad, spacing=layer.scale,
                                             alpha=params.alpha, beta=params.beta, gamma=params.gamma,
-                                            n_iter=params.n_iter, spacing=layer.scale, end_coef=params.end_coef)
+                                            n_iter=params.n_iter, end_coef=params.end_coef)
 
                     # remove the 2 polygons from the shapes layer
                     layer.selected_data = set(range(layer.nshapes - 2, layer.nshapes))
