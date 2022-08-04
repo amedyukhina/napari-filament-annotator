@@ -57,10 +57,6 @@ def annotate_filaments(annotation_layer, params, output_fn=None, image_layer=Non
                     mt = compute_polygon_intersection(polygons, layer.scale)
                     if image_layer is not None:
                         mt = interpolate(mt, npoints=params.n_interp)
-                        # mt = active_contour_local(snake=mt, img=image_layer.data.copy(), sigma=params.sigma,
-                        #                           rad=params.rad, spacing=layer.scale,
-                        #                           alpha=params.alpha, beta=params.beta, gamma=params.gamma,
-                        #                           n_iter=params.n_iter, end_coef=params.end_coef)
                         mt = active_contour(snake=mt, grad=grad, spacing=layer.scale,
                                             alpha=params.alpha, beta=params.beta, gamma=params.gamma,
                                             n_iter=params.n_iter, end_coef=params.end_coef)

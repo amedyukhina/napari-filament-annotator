@@ -72,20 +72,3 @@ def active_contour(snake, img=None, grad=None, spacing=None, alpha=0.01, beta=0.
     snake = evolve_snake(snake, n_iter, grad, spacing, alpha, beta, gamma, end_coef)
 
     return snake
-
-
-def active_contour_local(snake, img=None, spacing=None, sigma=0.1, rad=0.3,
-                         alpha=0.01, beta=0.1, gamma=1, n_iter=1000, end_coef=0.01):
-    start = np.int_(snake.min(0)) - rad
-    end = np.int_(snake.max(0) + 1) + rad + 1
-    imgf = get_neighborhood_mask(img, snake, rad, sigma, start, end)
-    grad = gradient(imgf, spacing)
-
-    c = np.arange(1, n_iter + 1)[::-1] / n_iter
-
-    coef = np.ones_like(snake)
-    coef[0] = end_coef
-    coef[-1] = end_coef
-
-    snake = evolve_snake(snake - start, n_iter, grad, spacing, alpha, beta, gamma, end_coef) + start
-    return snake
