@@ -9,7 +9,8 @@ import numpy as np
 import pandas as pd
 from magicgui import magicgui
 from napari.utils.notifications import show_info
-from qtpy.QtWidgets import QVBoxLayout, QPushButton, QWidget, QMessageBox, QLabel
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QVBoxLayout, QPushButton, QWidget, QMessageBox, QLabel, QSlider
 
 from ._annotation import annotate_filaments
 from .utils.io import annotation_to_pandas
@@ -20,9 +21,8 @@ class Params():
     def set_scale(self, scale):
         self.scale = np.array(scale)
 
-    def set_smoothing(self, sigma_um, neighb_rad):
+    def set_smoothing(self, sigma_um):
         self.sigma = sigma_um / self.scale
-        self.rad = np.int_(np.round_(neighb_rad / self.scale))
 
     def set_linewidth(self, line_width):
         self.line_width = line_width
@@ -43,6 +43,7 @@ class Annotator(QWidget):
         self.viewer = napari_viewer
         self.viewer.dims.ndisplay = 3
         self.annotation_layer = None
+        self.image = None
         self.params = Params()
         self.set_params()
         self.setup_ui()
@@ -59,6 +60,18 @@ class Annotator(QWidget):
         # Voxe size and annotation parameters
         layout.addWidget(QLabel("Image parameters"))
         self.add_magic_function(magicgui(self.image_params, layout='vertical', auto_call=True), layout)
+
+        # Slider for masking out spindle
+        layout.addWidget(QLabel("Mask out bright pixels"))
+        self.sld = QSlider(Qt.Horizontal)
+        self.sld.valueChanged.connect(self.set_maxval)
+        img_layer = self.get_image_layer()
+        if img_layer is not None:
+            self.sld.setMaximum(img_layer.data.max())
+            self.sld.setValue(img_layer.data.max())
+        self.sld.setValue(self.sld.maximum())
+        layout.addWidget(self.sld)
+        self.set_maxval()
 
         # "Add annotation layer" button
         btn = QPushButton("Add annotation layer")
@@ -82,6 +95,16 @@ class Annotator(QWidget):
         btn_save.clicked.connect(self.save_annotations)
         layout.addWidget(btn_save)
 
+    def set_maxval(self):
+        maxval = self.sld.value()
+        img_layer = self.get_image_layer()
+        if img_layer is not None:
+            if self.image is None:
+                self.image = img_layer.data
+                self.sld.setMaximum(self.image.max())
+            self.viewer.dims.ndisplay = 2
+            img_layer.data = np.where(self.image > maxval, 0, self.image)
+
     def add_magic_function(self, function, _layout):
         self.viewer.layers.events.inserted.connect(function.reset_choices)
         self.viewer.layers.events.removed.connect(function.reset_choices)
@@ -95,12 +118,14 @@ class Annotator(QWidget):
             self.viewer.dims.ndisplay = 2
             self.viewer.dims.ndisplay = 3
 
-    def image_params(self, voxel_size_xy: float = 0.035, voxel_size_z: float = 0.140):
+    def image_params(self, voxel_size_xy: float = 0.035, voxel_size_z: float = 0.140, sigma_um: float = 0.05):
         """
         Specify voxel size.
 
         Parameters
         ----------
+        sigma_um : flaot
+            Gaussian sigma (in microns) to smooth the image for identifying the brightest neighborhood point.
         voxel_size_xy : float
             Voxel size in xy (microns)
         voxel_size_z : float
@@ -108,6 +133,7 @@ class Annotator(QWidget):
         """
         self.set_scale([voxel_size_z, voxel_size_xy, voxel_size_xy])
         self.params.set_scale(self.scale)
+        self.params.set_smoothing(sigma_um)
 
     def display_params(self, line_width: float = 0.5):
         """
@@ -119,17 +145,12 @@ class Annotator(QWidget):
         """
         self.params.set_linewidth(line_width)
 
-    def ac_parameters(self, sigma_um: float = 0.050, neighb_rad_um: float = 0.3,
-                      n_iter: int = 1000, alpha: float = 0.01, beta: float = 0.1, gamma: float = 1,
+    def ac_parameters(self, n_iter: int = 1000, alpha: float = 0.01, beta: float = 0.1, gamma: float = 1,
                       n_interp: int = 3, end_coef: float = 0.0):
         """
 
         Parameters
         ----------
-        sigma_um : flaot
-            Gaussian sigma (in microns) to smooth the image for identifying the brightest neighborhood point.
-        neighb_rad_um : float
-            Neighborhood radius (in microns), in which to perform active contour fitting.
         n_iter : int
             Number of iterations of the active contour
             Width of the annotation lines in the viewer.
@@ -145,21 +166,28 @@ class Annotator(QWidget):
             Coefficient (between 0 and 1) to scale the forces applied to the contour end points.
             Set to 0 to fix the end points.
         """
-        self.params.set_smoothing(sigma_um, neighb_rad_um)
         self.params.set_ac_parameters(alpha=alpha, beta=beta, gamma=gamma, n_iter=n_iter, n_interp=n_interp,
                                       end_coef=end_coef)
+
+    def get_image_layer(self):
+        if len(self.viewer.layers) > 0 and isinstance(self.viewer.layers[0], napari.layers.Image):
+            return self.viewer.layers[0]
+        else:
+            return None
 
     def add_annotation_layer(self):
         """
         Add an annotation layer to the napari viewer.
         """
-        if len(self.viewer.layers) > 0 and isinstance(self.viewer.layers[0], napari.layers.Image):
+        img_layer = self.get_image_layer()
+        self.viewer.dims.ndisplay = 3
+        if img_layer is not None:
             if len(self.get_shape_layers()) > 0:
                 answer = self._confirm_adding_second_layer()
                 if answer == QMessageBox.No:
                     return
 
-            shape = self.viewer.layers[0].data.shape
+            shape = img_layer.data.shape
 
             # add a bounding box to set the coordinates range
             bbox = list(itertools.product(*[np.arange(2)
