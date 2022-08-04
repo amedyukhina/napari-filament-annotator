@@ -10,7 +10,8 @@ import pandas as pd
 from magicgui import magicgui
 from napari.utils.notifications import show_info
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QVBoxLayout, QPushButton, QWidget, QMessageBox, QLabel, QSlider
+from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QMessageBox, QLabel, QSlider
+from qtpy.QtWidgets import QTableWidget, QTableWidgetItem
 
 from ._annotation import annotate_filaments
 from .utils.io import annotation_to_pandas
@@ -27,15 +28,15 @@ class Params():
     def set_linewidth(self, line_width):
         self.line_width = line_width
 
-    def set_ac_parameters(self, alpha=0.01, beta=0.1, gamma=1, n_iter=100, n_interp=5,
-                          end_coef=0.01):
+    def set_coef(self, alpha=0.01, beta=0.1, gamma=1):
         self.alpha = alpha
         self.beta = beta
         self.gamma = gamma
+
+    def set_ac_parameters(self, n_iter=100, n_interp=5, end_coef=0.01):
         self.n_iter = n_iter
         self.n_interp = n_interp
         self.end_coef = end_coef
-
 
 class Annotator(QWidget):
     def __init__(self, napari_viewer):
@@ -49,20 +50,27 @@ class Annotator(QWidget):
         self.setup_ui()
 
     def set_params(self):
-        self.image_params()
+        self.voxel_params()
+        self.sigma_param()
         self.display_params()
-        self.ac_parameters()
+        self.ac_parameters1()
+        self.ac_parameters2()
 
     def setup_ui(self):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
         # Voxe size and annotation parameters
-        layout.addWidget(QLabel("Image parameters"))
-        self.add_magic_function(magicgui(self.image_params, layout='vertical', auto_call=True), layout)
+        l1 = QHBoxLayout()
+        layout.addLayout(l1)
+        l1.addWidget(QLabel("Image parameters"))
+        self.add_magic_function(magicgui(self.sigma_param, layout='vertical', auto_call=True), l1)
+        self.add_magic_function(magicgui(self.voxel_params, layout='horizontal', auto_call=True), layout)
 
         # Slider for masking out spindle
-        layout.addWidget(QLabel("Mask out bright pixels"))
+        l2 = QHBoxLayout()
+        layout.addLayout(l2)
+        l2.addWidget(QLabel("Mask out bright pixels"))
         self.sld = QSlider(Qt.Horizontal)
         self.sld.valueChanged.connect(self.set_maxval)
         img_layer = self.get_image_layer()
@@ -70,7 +78,7 @@ class Annotator(QWidget):
             self.sld.setMaximum(img_layer.data.max())
             self.sld.setValue(img_layer.data.max())
         self.sld.setValue(self.sld.maximum())
-        layout.addWidget(self.sld)
+        l2.addWidget(self.sld, Qt.Horizontal)
         self.set_maxval()
 
         # "Add annotation layer" button
@@ -79,21 +87,42 @@ class Annotator(QWidget):
         layout.addWidget(btn)
 
         # Display parameters
-        layout.addWidget(QLabel("Display parameters"))
-        self.add_magic_function(magicgui(self.display_params, layout='vertical', auto_call=True), layout)
+        l3 = QHBoxLayout()
+        layout.addLayout(l3)
+        l3.addWidget(QLabel("Display parameters"))
+        self.add_magic_function(magicgui(self.display_params, layout='vertical', auto_call=True), l3)
 
         # Active contour parameters
         layout.addWidget(QLabel("Active contour parameters"))
-        self.add_magic_function(magicgui(self.ac_parameters, layout='vertical', auto_call=True), layout)
+        l4 = QHBoxLayout()
+        layout.addLayout(l4)
+        self.add_magic_function(magicgui(self.ac_parameters1, layout='vertical', auto_call=True), l4)
+        self.add_magic_function(magicgui(self.ac_parameters2, layout='vertical', auto_call=True), l4)
+
+        # # Annotation table
+        # layout.addWidget(QLabel("Current annotations"))
+        # self.table = QTableWidget()
+        # self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        # self.table.setRowCount(3)
+        # self.table.setColumnCount(10)
+        #
+        # for i in range(10):
+        #     self.table.setHorizontalHeaderItem(i, QTableWidgetItem(str(i)))
+        #     for j in range(3):
+        #         self.table.setItem(j, i, QTableWidgetItem(str(j)))
+        # layout.addWidget(self.table)
 
         # File dialog
-        layout.addWidget(QLabel("Output file"))
+        l5 = QHBoxLayout()
+        layout.addLayout(l5)
         self.add_magic_function(magicgui(self.annotation_filename, layout='vertical', auto_call=True,
-                                         filename={"mode": "w", "label": "Choose output CSV file:", "filter": "*.csv"}),
-                                layout)
+                                         filename={"mode": "w",
+                                                   "label": "Output CSV file:",
+                                                   "filter": "*.csv"}),
+                                l5)
         btn_save = QPushButton("Save annotations")
         btn_save.clicked.connect(self.save_annotations)
-        layout.addWidget(btn_save)
+        l5.addWidget(btn_save)
 
     def set_maxval(self):
         maxval = self.sld.value()
@@ -118,14 +147,12 @@ class Annotator(QWidget):
             self.viewer.dims.ndisplay = 2
             self.viewer.dims.ndisplay = 3
 
-    def image_params(self, voxel_size_xy: float = 0.035, voxel_size_z: float = 0.140, sigma_um: float = 0.05):
+    def voxel_params(self, voxel_size_xy: float = 0.035, voxel_size_z: float = 0.140):
         """
         Specify voxel size.
 
         Parameters
         ----------
-        sigma_um : flaot
-            Gaussian sigma (in microns) to smooth the image for identifying the brightest neighborhood point.
         voxel_size_xy : float
             Voxel size in xy (microns)
         voxel_size_z : float
@@ -133,6 +160,17 @@ class Annotator(QWidget):
         """
         self.set_scale([voxel_size_z, voxel_size_xy, voxel_size_xy])
         self.params.set_scale(self.scale)
+
+
+    def sigma_param(self, sigma_um: float = 0.05):
+        """
+        Specify voxel size.
+
+        Parameters
+        ----------
+        sigma_um : flaot
+            Gaussian sigma (in microns) to smooth the image for identifying the brightest neighborhood point.
+        """
         self.params.set_smoothing(sigma_um)
 
     def display_params(self, line_width: float = 0.5):
@@ -145,8 +183,22 @@ class Annotator(QWidget):
         """
         self.params.set_linewidth(line_width)
 
-    def ac_parameters(self, n_iter: int = 1000, alpha: float = 0.01, beta: float = 0.1, gamma: float = 1,
-                      n_interp: int = 3, end_coef: float = 0.0):
+    def ac_parameters1(self, alpha: float = 0.01, beta: float = 0.1, gamma: float = 1):
+        """
+
+        Parameters
+        ----------
+        alpha : float
+            Active contour weight for the first derivative
+        beta : float
+            Active contour weight for the seconf derivative
+        gamma : float
+            Active contour weight for the image contribution
+        """
+        self.params.set_coef(alpha=alpha, beta=beta, gamma=gamma)
+
+
+    def ac_parameters2(self, n_iter: int = 1000, n_interp: int = 3, end_coef: float = 0.0):
         """
 
         Parameters
@@ -154,20 +206,13 @@ class Annotator(QWidget):
         n_iter : int
             Number of iterations of the active contour
             Width of the annotation lines in the viewer.
-        alpha : float
-            Active contour weight for the first derivative
-        beta : float
-            Active contour weight for the seconf derivative
-        gamma : float
-            Active contour weight for the image contribution
         n_interp : int
             Number of points to interpolate between each annotated point
         end_coef : float
             Coefficient (between 0 and 1) to scale the forces applied to the contour end points.
             Set to 0 to fix the end points.
         """
-        self.params.set_ac_parameters(alpha=alpha, beta=beta, gamma=gamma, n_iter=n_iter, n_interp=n_interp,
-                                      end_coef=end_coef)
+        self.params.set_ac_parameters(n_iter=n_iter, n_interp=n_interp, end_coef=end_coef)
 
     def get_image_layer(self):
         if len(self.viewer.layers) > 0 and isinstance(self.viewer.layers[0], napari.layers.Image):
