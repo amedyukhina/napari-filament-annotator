@@ -279,9 +279,7 @@ class Annotator(QWidget):
 
     def load_annotations(self, filename=Path(".")):
         df = pd.read_csv(filename)
-        print(df)
         data = pandas_to_annotations(df)
-        print(data)
         if self.annotation_layer is None:
             self.add_annotation_layer()
         self.annotation_layer.add(data, shape_type='path', edge_color='green',
