@@ -2,6 +2,7 @@
 3D Annotator Widget
 """
 import itertools
+import os
 from pathlib import Path
 
 import napari
@@ -44,7 +45,11 @@ class Annotator(QWidget):
         self.viewer = napari_viewer
         self.viewer.dims.ndisplay = 3
         self.annotation_layer = None
-        self.image = None
+        image_layer = self.get_image_layer()
+        self.image = image_layer.data if image_layer is not None else None
+        self.datapath = os.path.dirname(image_layer.source.path) if image_layer is not None else '.'
+        self.filename = image_layer.source.path[:-len(image_layer.source.path.split('.')[-1]) - 1] + '.csv' \
+            if image_layer is not None else 'annotations.csv'
         self.params = Params()
         self.set_params()
         self.setup_ui()
@@ -118,7 +123,8 @@ class Annotator(QWidget):
         self.add_magic_function(magicgui(self.load_annotations, layout='vertical', auto_call=True,
                                          filename={"mode": "r",
                                                    "label": "Load existing annotations:",
-                                                   "filter": "*.csv"}),
+                                                   "filter": "*.csv",
+                                                   "value": self.datapath}),
                                 l5)
 
         # Save file dialog
@@ -127,7 +133,8 @@ class Annotator(QWidget):
         self.add_magic_function(magicgui(self.annotation_filename, layout='vertical', auto_call=True,
                                          filename={"mode": "w",
                                                    "label": "Output CSV file:",
-                                                   "filter": "*.csv"}),
+                                                   "filter": "*.csv",
+                                                   "value": self.filename}),
                                 l6)
         btn_save = QPushButton("Save annotations")
         btn_save.clicked.connect(self.save_annotations)
@@ -273,11 +280,11 @@ class Annotator(QWidget):
         msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         return msg.exec_()
 
-    def annotation_filename(self, filename=Path("annotations.csv")):
+    def annotation_filename(self, filename=Path('.')):
         self.filename = filename
         self.save_annotations()
 
-    def load_annotations(self, filename=Path(".")):
+    def load_annotations(self, filename=Path('.')):
         df = pd.read_csv(filename)
         data = pandas_to_annotations(df)
         if self.annotation_layer is None:
