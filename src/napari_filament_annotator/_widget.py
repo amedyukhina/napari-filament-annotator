@@ -11,10 +11,9 @@ from magicgui import magicgui
 from napari.utils.notifications import show_info
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QMessageBox, QLabel, QSlider
-from qtpy.QtWidgets import QTableWidget, QTableWidgetItem
 
 from ._annotation import annotate_filaments
-from .utils.io import annotation_to_pandas
+from .utils.io import annotation_to_pandas, pandas_to_annotations
 
 
 class Params():
@@ -37,6 +36,7 @@ class Params():
         self.n_iter = n_iter
         self.n_interp = n_interp
         self.end_coef = end_coef
+
 
 class Annotator(QWidget):
     def __init__(self, napari_viewer):
@@ -112,17 +112,26 @@ class Annotator(QWidget):
         #         self.table.setItem(j, i, QTableWidgetItem(str(j)))
         # layout.addWidget(self.table)
 
-        # File dialog
+        # Open file dialog
         l5 = QHBoxLayout()
         layout.addLayout(l5)
+        self.add_magic_function(magicgui(self.load_annotations, layout='vertical', auto_call=True,
+                                         filename={"mode": "r",
+                                                   "label": "Load existing annotations:",
+                                                   "filter": "*.csv"}),
+                                l5)
+
+        # Save file dialog
+        l6 = QHBoxLayout()
+        layout.addLayout(l6)
         self.add_magic_function(magicgui(self.annotation_filename, layout='vertical', auto_call=True,
                                          filename={"mode": "w",
                                                    "label": "Output CSV file:",
                                                    "filter": "*.csv"}),
-                                l5)
+                                l6)
         btn_save = QPushButton("Save annotations")
         btn_save.clicked.connect(self.save_annotations)
-        l5.addWidget(btn_save)
+        l6.addWidget(btn_save)
 
     def set_maxval(self):
         maxval = self.sld.value()
@@ -161,7 +170,6 @@ class Annotator(QWidget):
         self.set_scale([voxel_size_z, voxel_size_xy, voxel_size_xy])
         self.params.set_scale(self.scale)
 
-
     def sigma_param(self, sigma_um: float = 0.05):
         """
         Specify voxel size.
@@ -196,7 +204,6 @@ class Annotator(QWidget):
             Active contour weight for the image contribution
         """
         self.params.set_coef(alpha=alpha, beta=beta, gamma=gamma)
-
 
     def ac_parameters2(self, n_iter: int = 1000, n_interp: int = 3, end_coef: float = 0.0):
         """
@@ -268,6 +275,17 @@ class Annotator(QWidget):
 
     def annotation_filename(self, filename=Path("annotations.csv")):
         self.filename = filename
+        self.save_annotations()
+
+    def load_annotations(self, filename=Path(".")):
+        df = pd.read_csv(filename)
+        print(df)
+        data = pandas_to_annotations(df)
+        print(data)
+        if self.annotation_layer is None:
+            self.add_annotation_layer()
+        self.annotation_layer.add(data, shape_type='path', edge_color='green',
+                                  edge_width=self.params.line_width)
 
     def save_annotations(self):
         if self.annotation_layer is not None and self.annotation_layer.nshapes > 1:
