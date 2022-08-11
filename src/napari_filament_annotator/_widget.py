@@ -16,6 +16,14 @@ from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QMess
 from ._annotation import annotate_filaments
 from .utils.io import annotation_to_pandas, pandas_to_annotations
 
+TEXT_PROP = {
+    'text': 'label',
+    'anchor': 'upper_left',
+    'translation': [2, 2, 5],
+    'size': 7,
+    'color': 'green'
+}
+
 
 class Params():
 
@@ -241,7 +249,7 @@ class Annotator(QWidget):
         img_layer = self.get_image_layer()
         self.viewer.dims.ndisplay = 3
         if img_layer is not None:
-            if len(self.get_shape_layers()) > 0:
+            if self.annotation_layer_exists():
                 answer = self._confirm_adding_second_layer()
                 if answer == QMessageBox.No:
                     return
@@ -268,8 +276,9 @@ class Annotator(QWidget):
         else:
             show_info("No images open! Please open an image first")
 
-    def get_shape_layers(self):
-        return [layer for layer in self.viewer.layers if isinstance(layer, napari.layers.Shapes)]
+    def annotation_layer_exists(self):
+        return len([layer for layer in self.viewer.layers
+                    if isinstance(layer, napari.layers.Shapes) and layer.name == 'annotations']) > 0
 
     def _confirm_adding_second_layer(self):
         msg = QMessageBox()
@@ -286,7 +295,13 @@ class Annotator(QWidget):
 
     def load_annotations(self, filename=Path('.')):
         df = pd.read_csv(filename)
-        data = pandas_to_annotations(df)
+        data, labels = pandas_to_annotations(df)
+        self.viewer.add_shapes(data, name='existing_annotations',
+                               shape_type='path', edge_color='green',
+                               edge_width=self.params.line_width,
+                               scale=self.viewer.layers[0].scale,
+                               blending='additive',
+                               properties={'label': labels}, text=TEXT_PROP)
         if self.annotation_layer is None:
             self.add_annotation_layer()
         self.annotation_layer.add(data, shape_type='path', edge_color='green',

@@ -30,8 +30,10 @@ def annotation_to_pandas(data: list, col_name='id') -> pd.DataFrame:
 def pandas_to_annotations(df: pd.DataFrame, col_name='id') -> list:
     columns = ['z', 'y', 'x']
     data = []
+    labels = []
     if len(df) > 0:
         for s in df[col_name].unique():
             d = df[df[col_name] == s][columns].values
             data.append(d)
-    return data
+            labels.append(s)
+    return data, labels
