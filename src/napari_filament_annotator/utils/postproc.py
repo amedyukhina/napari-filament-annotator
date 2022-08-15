@@ -22,6 +22,26 @@ def interpolate(x, npoints=5):
         return x
 
 
+def remove_corners(x, k=3):
+    d1, d2 = get_derivatives_1_2(x)
+    d1 = np.sqrt((d1 ** 2).sum(1))
+    d2 = np.sqrt((d2 ** 2).sum(1))
+    d2 = np.where(d2 / d1 > 1, d2, 0)
+    i1 = np.argmax(d2[:k])
+    i2 = np.argmax(d2[-k:][::-1])
+    x = x[i1:]
+    if i2 > 0:
+        x = x[:-i2]
+    return x
+
+
+def get_derivatives_1_2(x):
+    x = np.concatenate([x[1:3][::-1], x, x[-3:-1][::-1]])
+    d1 = x - np.roll(x, -1, 0)
+    d2 = np.roll(x, 1, 0) + np.roll(x, -1, 0) - 2 * x
+    return d1[2:-2], d2[2:-2]
+
+
 def get_derivatives(x):
     x = np.concatenate([x[1:3][::-1], x, x[-3:-1][::-1]])
     d2 = np.roll(x, 1, 0) + np.roll(x, -1, 0) - 2 * x

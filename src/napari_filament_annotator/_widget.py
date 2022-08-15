@@ -41,10 +41,11 @@ class Params():
         self.beta = beta
         self.gamma = gamma
 
-    def set_ac_parameters(self, n_iter=100, n_interp=5, end_coef=0.01):
+    def set_ac_parameters(self, n_iter=100, n_interp=5, end_coef=0.01, remove_corners=True):
         self.n_iter = n_iter
         self.n_interp = n_interp
         self.end_coef = end_coef
+        self.remove_corners = remove_corners
 
 
 class Annotator(QWidget):
@@ -155,7 +156,6 @@ class Annotator(QWidget):
             if self.image is None:
                 self.image = img_layer.data
                 self.sld.setMaximum(self.image.max())
-            self.viewer.dims.ndisplay = 2
             img_layer.data = np.where(self.image > maxval, 0, self.image)
 
     def add_magic_function(self, function, _layout):
@@ -220,7 +220,8 @@ class Annotator(QWidget):
         """
         self.params.set_coef(alpha=alpha, beta=beta, gamma=gamma)
 
-    def ac_parameters2(self, n_iter: int = 1000, n_interp: int = 3, end_coef: float = 0.0):
+    def ac_parameters2(self, n_iter: int = 1000, n_interp: int = 3, end_coef: float = 0.0,
+                       remove_corners: bool = True):
         """
 
         Parameters
@@ -233,8 +234,11 @@ class Annotator(QWidget):
         end_coef : float
             Coefficient (between 0 and 1) to scale the forces applied to the contour end points.
             Set to 0 to fix the end points.
+        remove_corners : bool
+            Remove corners at the start and end of filaments, which occur due to attraction to bright image parts
         """
-        self.params.set_ac_parameters(n_iter=n_iter, n_interp=n_interp, end_coef=end_coef)
+        self.params.set_ac_parameters(n_iter=n_iter, n_interp=n_interp,
+                                      end_coef=end_coef, remove_corners=remove_corners)
 
     def get_image_layer(self):
         if len(self.viewer.layers) > 0 and isinstance(self.viewer.layers[0], napari.layers.Image):

@@ -2,7 +2,7 @@ import numpy as np
 from scipy import ndimage
 
 from .utils.geom import compute_polygon_intersection
-from .utils.postproc import active_contour, interpolate, gradient
+from .utils.postproc import active_contour, interpolate, gradient, remove_corners
 
 
 def annotate_filaments(annotation_layer, params, output_fn=None, image_layer=None):
@@ -60,6 +60,8 @@ def annotate_filaments(annotation_layer, params, output_fn=None, image_layer=Non
                         mt = active_contour(snake=mt, grad=grad, spacing=layer.scale,
                                             alpha=params.alpha, beta=params.beta, gamma=params.gamma,
                                             n_iter=params.n_iter, end_coef=params.end_coef)
+                        if params.remove_corners:
+                            mt = remove_corners(mt, params.n_interp + 1)
 
                     # remove the 2 polygons from the shapes layer
                     layer.selected_data = set(range(layer.nshapes - 2, layer.nshapes))
