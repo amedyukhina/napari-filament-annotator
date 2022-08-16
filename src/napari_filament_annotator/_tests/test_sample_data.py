@@ -2,7 +2,7 @@ import numpy as np
 from napari_filament_annotator import load_sample_image
 
 
-def test_something():
+def test_sample_data():
     img = load_sample_image()
     assert isinstance(img, list)
     assert isinstance(img[0], tuple)
