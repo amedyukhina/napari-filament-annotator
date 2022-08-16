@@ -56,9 +56,9 @@ class Annotator(QWidget):
         self.annotation_layer = None
         image_layer = self.get_image_layer()
         self.image = image_layer.data if image_layer is not None else None
-        self.datapath = os.path.dirname(image_layer.source.path) if image_layer is not None else '.'
-        self.filename = image_layer.source.path[:-len(image_layer.source.path.split('.')[-1]) - 1] + '.csv' \
-            if image_layer is not None else 'annotations.csv'
+        path = image_layer.source.path if image_layer is not None else None
+        self.datapath = os.path.dirname(path) if path is not None else '.'
+        self.filename = path[:-len(path.split('.')[-1]) - 1] + '.csv' if path is not None else 'annotations.csv'
         self.params = Params()
         self.set_params()
         self.setup_ui()

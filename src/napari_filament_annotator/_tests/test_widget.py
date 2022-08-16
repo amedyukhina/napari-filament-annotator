@@ -14,11 +14,11 @@ def test_example_q_widget(make_napari_viewer, capsys):
 
     # call "add annotation layer" without image and assert no shape layers were added
     annotator.add_annotation_layer()
-    assert len(annotator.get_shape_layers()) == 0
+    assert annotator.annotation_layer_exists() is False
 
     # add an image
     viewer.add_image(np.random.random((10, 50, 50)))
 
     # call "add annotation layer" again and assert a new shape layer was added
     annotator.add_annotation_layer()
-    assert len(annotator.get_shape_layers()) == 1
+    assert annotator.annotation_layer_exists()
