@@ -4,6 +4,7 @@ import tempfile
 
 import numpy as np
 import pytest
+from scipy import ndimage
 
 
 @pytest.fixture(scope='module')
@@ -53,6 +54,24 @@ def paths():
         path = np.random.randint(0, 100, (l, 3))
         paths.append(path)
     return paths
+
+
+@pytest.fixture(scope='module')
+def img_snake():
+    n = 100
+    n2 = 50
+    img = np.zeros((10, 50, 50))
+    z = np.int_(np.round_(np.linspace(2, 8, n)))
+    y = np.int_(np.round_(np.linspace(10, 30, n)))
+    x = np.int_(np.round_(np.linspace(5, 40, n) + 10 * np.sin(np.linspace(0, 5, n))))
+    img[z, y, x] = 1
+
+    img = ndimage.gaussian_filter(img, 2)
+
+    z2 = np.int_(np.round_(np.linspace(2, 8, n2)))
+    y2 = np.int_(np.round_(np.linspace(10, 30, n2)))
+    x2 = np.int_(np.round_(np.linspace(5, 40, n2) + 10 * np.sin(np.linspace(0, 5, n2))))
+    return img, np.array([z2, y2, x2]).transpose()
 
 
 @pytest.fixture(scope='module')
