@@ -1,6 +1,6 @@
 import numpy as np
 
-from numpy.utils.geom import tetragon_intersection, compute_polygon_intersection
+from napari_filament_annotator.utils.geom import tetragon_intersection, compute_polygon_intersection
 
 
 def test_tetragon_intersection(tetragons):

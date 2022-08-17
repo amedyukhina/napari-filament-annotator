@@ -1,5 +1,5 @@
 """
-3D Annotator Widget
+3D AnnotatorWidget Widget
 """
 import itertools
 import os
@@ -13,7 +13,8 @@ from napari.utils.notifications import show_info
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QMessageBox, QLabel, QSlider
 
-from ._annotation import annotate_filaments
+from ._annotator import Annotator
+from ._params import Params
 from .utils.io import annotation_to_pandas, pandas_to_annotations
 
 TEXT_PROP = {
@@ -25,34 +26,13 @@ TEXT_PROP = {
 }
 
 
-class Params():
-
-    def set_scale(self, scale):
-        self.scale = np.array(scale)
-
-    def set_smoothing(self, sigma_um):
-        self.sigma = sigma_um / self.scale
-
-    def set_linewidth(self, line_width):
-        self.line_width = line_width
-
-    def set_coef(self, alpha=0.01, beta=0.1, gamma=1):
-        self.alpha = alpha
-        self.beta = beta
-        self.gamma = gamma
-
-    def set_ac_parameters(self, n_iter=100, n_interp=5, end_coef=0.01, remove_corners=True):
-        self.n_iter = n_iter
-        self.n_interp = n_interp
-        self.end_coef = end_coef
-        self.remove_corners = remove_corners
-
-
-class Annotator(QWidget):
+class AnnotatorWidget(QWidget):
+    """
+    Annotator Widget
+    """
     def __init__(self, napari_viewer):
         super().__init__()
         self.viewer = napari_viewer
-        self.viewer.dims.ndisplay = 3
         self.annotation_layer = None
         image_layer = self.get_image_layer()
         self.image = image_layer.data if image_layer is not None else None
@@ -64,112 +44,12 @@ class Annotator(QWidget):
         self.setup_ui()
 
     def set_params(self):
+        """Set annotation parameters"""
         self.voxel_params()
         self.sigma_param()
         self.display_params()
         self.ac_parameters1()
         self.ac_parameters2()
-
-    def setup_ui(self):
-        layout = QVBoxLayout()
-        self.setLayout(layout)
-
-        # Voxe size and annotation parameters
-        l1 = QHBoxLayout()
-        layout.addLayout(l1)
-        l1.addWidget(QLabel("Image parameters"))
-        self.add_magic_function(magicgui(self.sigma_param, layout='vertical', auto_call=True), l1)
-        self.add_magic_function(magicgui(self.voxel_params, layout='horizontal', auto_call=True), layout)
-
-        # Slider for masking out spindle
-        l2 = QHBoxLayout()
-        layout.addLayout(l2)
-        l2.addWidget(QLabel("Mask out bright pixels"))
-        self.sld = QSlider(Qt.Horizontal)
-        self.sld.valueChanged.connect(self.set_maxval)
-        img_layer = self.get_image_layer()
-        if img_layer is not None:
-            self.sld.setMaximum(img_layer.data.max())
-            self.sld.setValue(img_layer.data.max())
-        self.sld.setValue(self.sld.maximum())
-        l2.addWidget(self.sld, Qt.Horizontal)
-        self.set_maxval()
-
-        # "Add annotation layer" button
-        btn = QPushButton("Add annotation layer")
-        btn.clicked.connect(self.add_annotation_layer)
-        layout.addWidget(btn)
-
-        # Display parameters
-        l3 = QHBoxLayout()
-        layout.addLayout(l3)
-        l3.addWidget(QLabel("Display parameters"))
-        self.add_magic_function(magicgui(self.display_params, layout='vertical', auto_call=True), l3)
-
-        # Active contour parameters
-        layout.addWidget(QLabel("Active contour parameters"))
-        l4 = QHBoxLayout()
-        layout.addLayout(l4)
-        self.add_magic_function(magicgui(self.ac_parameters1, layout='vertical', auto_call=True), l4)
-        self.add_magic_function(magicgui(self.ac_parameters2, layout='vertical', auto_call=True), l4)
-
-        # # Annotation table
-        # layout.addWidget(QLabel("Current annotations"))
-        # self.table = QTableWidget()
-        # self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        # self.table.setRowCount(3)
-        # self.table.setColumnCount(10)
-        #
-        # for i in range(10):
-        #     self.table.setHorizontalHeaderItem(i, QTableWidgetItem(str(i)))
-        #     for j in range(3):
-        #         self.table.setItem(j, i, QTableWidgetItem(str(j)))
-        # layout.addWidget(self.table)
-
-        # Open file dialog
-        l5 = QHBoxLayout()
-        layout.addLayout(l5)
-        self.add_magic_function(magicgui(self.load_annotations, layout='vertical', auto_call=True,
-                                         filename={"mode": "r",
-                                                   "label": "Load existing annotations:",
-                                                   "filter": "*.csv",
-                                                   "value": self.datapath}),
-                                l5)
-
-        # Save file dialog
-        l6 = QHBoxLayout()
-        layout.addLayout(l6)
-        self.add_magic_function(magicgui(self.annotation_filename, layout='vertical', auto_call=True,
-                                         filename={"mode": "w",
-                                                   "label": "Output CSV file:",
-                                                   "filter": "*.csv",
-                                                   "value": self.filename}),
-                                l6)
-        btn_save = QPushButton("Save annotations")
-        btn_save.clicked.connect(self.save_annotations)
-        l6.addWidget(btn_save)
-
-    def set_maxval(self):
-        maxval = self.sld.value()
-        img_layer = self.get_image_layer()
-        if img_layer is not None:
-            if self.image is None:
-                self.image = img_layer.data
-                self.sld.setMaximum(self.image.max())
-            img_layer.data = np.where(self.image > maxval, 0, self.image)
-
-    def add_magic_function(self, function, _layout):
-        self.viewer.layers.events.inserted.connect(function.reset_choices)
-        self.viewer.layers.events.removed.connect(function.reset_choices)
-        _layout.addWidget(function.native)
-
-    def set_scale(self, scale):
-        self.scale = scale
-        if np.min(scale) > 0:
-            for i in range(len(self.viewer.layers)):
-                self.viewer.layers[i].scale = scale
-            self.viewer.dims.ndisplay = 2
-            self.viewer.dims.ndisplay = 3
 
     def voxel_params(self, voxel_size_xy: float = 0.035, voxel_size_z: float = 0.140):
         """
@@ -182,8 +62,9 @@ class Annotator(QWidget):
         voxel_size_z : float
             Voxel size in z (microns)
         """
-        self.set_scale([voxel_size_z, voxel_size_xy, voxel_size_xy])
+        self._set_scale([voxel_size_z, voxel_size_xy, voxel_size_xy])
         self.params.set_scale(self.scale)
+
 
     def sigma_param(self, sigma_um: float = 0.05):
         """
@@ -240,64 +121,15 @@ class Annotator(QWidget):
         self.params.set_ac_parameters(n_iter=n_iter, n_interp=n_interp,
                                       end_coef=end_coef, remove_corners=remove_corners)
 
-    def get_image_layer(self):
-        if len(self.viewer.layers) > 0 and isinstance(self.viewer.layers[0], napari.layers.Image):
-            return self.viewer.layers[0]
-        else:
-            return None
-
-    def add_annotation_layer(self):
-        """
-        Add an annotation layer to the napari viewer.
-        """
-        img_layer = self.get_image_layer()
-        self.viewer.dims.ndisplay = 3
-        if img_layer is not None:
-            if self.annotation_layer_exists():
-                answer = self._confirm_adding_second_layer()
-                if answer == QMessageBox.No:
-                    return
-
-            shape = img_layer.data.shape
-
-            # add a bounding box to set the coordinates range
-            bbox = list(itertools.product(*[np.arange(2)
-                                            for i in range(len(shape[-3:]))]))
-            if len(shape) > 3:
-                bbox = [(0,) + b for b in bbox]
-            bbox = bbox * np.array(shape)
-
-            self.annotation_layer = self.viewer.add_shapes(bbox,
-                                                           name='annotations',
-                                                           shape_type='path',
-                                                           edge_width=0,
-                                                           scale=self.viewer.layers[0].scale,
-                                                           blending='additive'
-                                                           )
-            annotate_filaments(self.annotation_layer, params=self.params,
-                               image_layer=self.viewer.layers[0])
-
-        else:
-            show_info("No images open! Please open an image first")
-
-    def annotation_layer_exists(self):
-        return len([layer for layer in self.viewer.layers
-                    if isinstance(layer, napari.layers.Shapes) and layer.name == 'annotations']) > 0
-
-    def _confirm_adding_second_layer(self):
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Question)
-
-        msg.setWindowTitle("Annotation layer already exists")
-        msg.setText("Annotation layer already exists! Are you sure you want to add another annotation layer?")
-        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        return msg.exec_()
-
-    def annotation_filename(self, filename=Path('.')):
-        self.filename = filename
-        self.save_annotations()
-
     def load_annotations(self, filename=Path('.')):
+        """
+
+        Parameters
+        ----------
+        filename : Path
+            Filename to load annoations
+
+        """
         df = pd.read_csv(filename)
         data, labels = pandas_to_annotations(df)
         self.viewer.add_shapes(data, name='existing_annotations',
@@ -311,9 +143,148 @@ class Annotator(QWidget):
         self.annotation_layer.add(data, shape_type='path', edge_color='green',
                                   edge_width=self.params.line_width)
 
+    def get_annotation_filename(self, filename=Path('.')):
+        """
+
+        Parameters
+        ----------
+        filename : Path
+            Filename to save annotations
+        """
+        self.filename = filename
+        self.save_annotations()
+
     def save_annotations(self):
         if self.annotation_layer is not None and self.annotation_layer.nshapes > 1:
             annotation_to_pandas(self.annotation_layer.data[1:]).to_csv(self.filename, index=False)
         else:
             pd.DataFrame().to_csv(self.filename, index=False)
         print(rf"Saved to: {self.filename}")
+
+    def set_maxval(self):
+        maxval = self.sld.value()
+        img_layer = self.get_image_layer()
+        if img_layer is not None:
+            if self.image is None:
+                self.image = img_layer.data
+                self.sld.setMaximum(self.image.max())
+            img_layer.data = np.where(self.image > maxval, 0, self.image)
+
+    def get_image_layer(self):
+        if len(self.viewer.layers) > 0 and isinstance(self.viewer.layers[0], napari.layers.Image):
+            return self.viewer.layers[0]
+        else:
+            return None
+
+    def annotation_layer_exists(self):
+        """
+        Check if the annotation layer still exists in the viewer.
+        The self.annotation_layer variable will not get updated if the layer is deleted from the viewer.
+        """
+        return len([layer for layer in self.viewer.layers
+                    if isinstance(layer, napari.layers.Shapes) and layer.name == 'annotations']) > 0
+
+    def add_annotation_layer(self):
+        """
+        Add an annotation layer to the napari viewer.
+        """
+        img_layer = self.get_image_layer()
+        self.viewer.dims.ndisplay = 3
+        if img_layer is not None:
+            if self.annotation_layer_exists():
+                answer = self._confirm_adding_second_layer()
+                if answer == QMessageBox.No:
+                    return
+            self.annotator = Annotator(self.viewer, img_layer, self.params)
+            self.annotation_layer = self.annotator.annotation_layer
+
+        else:
+            show_info("No images open! Please open an image first")
+
+    def setup_ui(self):
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        # Voxe size and annotation parameters
+        l1 = QHBoxLayout()
+        layout.addLayout(l1)
+        l1.addWidget(QLabel("Image parameters"))
+        self._add_magic_function(magicgui(self.sigma_param, layout='vertical', auto_call=True), l1)
+        self._add_magic_function(magicgui(self.voxel_params, layout='horizontal', auto_call=True), layout)
+
+        # Slider for masking out spindle
+        l2 = QHBoxLayout()
+        layout.addLayout(l2)
+        l2.addWidget(QLabel("Mask out bright pixels"))
+        self.sld = QSlider(Qt.Horizontal)
+        self.sld.valueChanged.connect(self.set_maxval)
+        img_layer = self.get_image_layer()
+        if img_layer is not None:
+            self.sld.setMaximum(img_layer.data.max())
+            self.sld.setValue(img_layer.data.max())
+        self.sld.setValue(self.sld.maximum())
+        l2.addWidget(self.sld, Qt.Horizontal)
+        self.set_maxval()
+
+        # "Add annotation layer" button
+        btn = QPushButton("Add annotation layer")
+        btn.clicked.connect(self.add_annotation_layer)
+        layout.addWidget(btn)
+
+        # Display parameters
+        l3 = QHBoxLayout()
+        layout.addLayout(l3)
+        l3.addWidget(QLabel("Display parameters"))
+        self._add_magic_function(magicgui(self.display_params, layout='vertical', auto_call=True), l3)
+
+        # Active contour parameters
+        layout.addWidget(QLabel("Active contour parameters"))
+        l4 = QHBoxLayout()
+        layout.addLayout(l4)
+        self._add_magic_function(magicgui(self.ac_parameters1, layout='vertical', auto_call=True), l4)
+        self._add_magic_function(magicgui(self.ac_parameters2, layout='vertical', auto_call=True), l4)
+
+        # Open file dialog
+        l5 = QHBoxLayout()
+        layout.addLayout(l5)
+        self._add_magic_function(magicgui(self.load_annotations, layout='vertical', auto_call=True,
+                                          filename={"mode": "r",
+                                                   "label": "Load existing annotations:",
+                                                   "filter": "*.csv",
+                                                   "value": self.datapath}),
+                                 l5)
+
+        # Save file dialog
+        l6 = QHBoxLayout()
+        layout.addLayout(l6)
+        self._add_magic_function(magicgui(self.get_annotation_filename, layout='vertical', auto_call=True,
+                                          filename={"mode": "w",
+                                                   "label": "Output CSV file:",
+                                                   "filter": "*.csv",
+                                                   "value": self.filename}),
+                                 l6)
+        btn_save = QPushButton("Save annotations")
+        btn_save.clicked.connect(self.save_annotations)
+        l6.addWidget(btn_save)
+
+    def _set_scale(self, scale):
+        self.scale = scale
+        if np.min(scale) > 0:
+            for i in range(len(self.viewer.layers)):
+                self.viewer.layers[i].scale = scale
+            self.viewer.dims.ndisplay = 2
+            self.viewer.dims.ndisplay = 3
+
+    def _add_magic_function(self, function, _layout):
+        self.viewer.layers.events.inserted.connect(function.reset_choices)
+        self.viewer.layers.events.removed.connect(function.reset_choices)
+        _layout.addWidget(function.native)
+
+    def _confirm_adding_second_layer(self):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Question)
+
+        msg.setWindowTitle("Annotation layer already exists")
+        msg.setText("Annotation layer already exists! Are you sure you want to add another annotation layer?")
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        return msg.exec_()

@@ -6,12 +6,12 @@ contributions:
       python_name: napari_filament_annotator._sample_data:load_sample_image
       title: Load sample data for napari 3D filament annotator
     - id: napari-filament-annotator.make_annotator_widget
-      python_name: napari_filament_annotator._widget:Annotator
-      title: Make Annotator Widget
+      python_name: napari_filament_annotator._widget:AnnotatorWidget
+      title: Make AnnotatorWidget Widget
   sample_data:
     - key: napari.sample_filament_image_3d
       display_name: Sample Image
       command: napari-filament-annotator.load_sample_image
   widgets:
     - command: napari-filament-annotator.make_annotator_widget
-      display_name: 3D Filament Annotator
+      display_name: 3D Filament AnnotatorWidget
