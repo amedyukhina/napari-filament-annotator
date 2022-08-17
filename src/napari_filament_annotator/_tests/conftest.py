@@ -1,3 +1,8 @@
+import os
+import shutil
+import tempfile
+
+import numpy as np
 import pytest
 
 
@@ -37,3 +42,22 @@ def tetragons(polygons):
     p1 = [npt1[0], npt1[1], fpt1[1], fpt1[1]]
     p2 = [npt2[0], npt2[1], fpt2[1], fpt2[0]]
     return p1, p2
+
+
+@pytest.fixture(scope='module')
+def paths():
+    n = np.random.randint(5, 10)
+    paths = []
+    for i in range(n):
+        l = np.random.randint(10, 15)
+        path = np.random.randint(0, 100, (l, 3))
+        paths.append(path)
+    return paths
+
+
+@pytest.fixture(scope='module')
+def tmp_path():
+    path = tempfile.mkdtemp()
+    os.makedirs(path, exist_ok=True)
+    yield path
+    shutil.rmtree(path)

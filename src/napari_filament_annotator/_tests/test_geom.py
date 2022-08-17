@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..utils.geom import tetragon_intersection, compute_polygon_intersection
+from numpy.utils.geom import tetragon_intersection, compute_polygon_intersection
 
 
 def test_tetragon_intersection(tetragons):
