@@ -1,7 +1,6 @@
 """
 3D AnnotatorWidget Widget
 """
-import itertools
 import os
 from pathlib import Path
 
@@ -30,6 +29,7 @@ class AnnotatorWidget(QWidget):
     """
     Annotator Widget
     """
+
     def __init__(self, napari_viewer):
         super().__init__()
         self.viewer = napari_viewer
@@ -64,7 +64,6 @@ class AnnotatorWidget(QWidget):
         """
         self._set_scale([voxel_size_z, voxel_size_xy, voxel_size_xy])
         self.params.set_scale(self.scale)
-
 
     def sigma_param(self, sigma_um: float = 0.05):
         """
@@ -138,7 +137,7 @@ class AnnotatorWidget(QWidget):
                                scale=self.viewer.layers[0].scale,
                                blending='additive',
                                properties={'label': labels}, text=TEXT_PROP)
-        if self.annotation_layer is None:
+        if not self.annotation_layer_exists():
             self.add_annotation_layer()
         self.annotation_layer.add(data, shape_type='path', edge_color='green',
                                   edge_width=self.params.line_width)
@@ -249,9 +248,9 @@ class AnnotatorWidget(QWidget):
         layout.addLayout(l5)
         self._add_magic_function(magicgui(self.load_annotations, layout='vertical', auto_call=True,
                                           filename={"mode": "r",
-                                                   "label": "Load existing annotations:",
-                                                   "filter": "*.csv",
-                                                   "value": self.datapath}),
+                                                    "label": "Load existing annotations:",
+                                                    "filter": "*.csv",
+                                                    "value": self.datapath}),
                                  l5)
 
         # Save file dialog
@@ -259,9 +258,9 @@ class AnnotatorWidget(QWidget):
         layout.addLayout(l6)
         self._add_magic_function(magicgui(self.get_annotation_filename, layout='vertical', auto_call=True,
                                           filename={"mode": "w",
-                                                   "label": "Output CSV file:",
-                                                   "filter": "*.csv",
-                                                   "value": self.filename}),
+                                                    "label": "Output CSV file:",
+                                                    "filter": "*.csv",
+                                                    "value": self.filename}),
                                  l6)
         btn_save = QPushButton("Save annotations")
         btn_save.clicked.connect(self.save_annotations)
