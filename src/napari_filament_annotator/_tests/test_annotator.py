@@ -2,8 +2,6 @@ import numpy as np
 import pytest
 
 from napari_filament_annotator import AnnotatorWidget
-from napari_filament_annotator._annotator import Annotator
-from napari.utils.events import Event
 
 
 # make_napari_viewer is a pytest fixture that returns a napari viewer object
@@ -34,6 +32,7 @@ def test_add_delete(annotator, polygons):
 
     annotator.delete_the_last_shape(layer)
     assert layer.nshapes == 1
+
 
 def test_intersection(annotator, polygons):
     layer = annotator.annotation_layer
