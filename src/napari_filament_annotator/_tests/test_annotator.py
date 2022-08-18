@@ -33,6 +33,12 @@ def annotator(annotator_widget_with_image):
     return annotator_widget_with_image.annotator
 
 
+def test_time_series(annotator_widget):
+    annotator_widget.viewer.add_image(np.random.randint(0, 100, (5, 50, 100, 100)))
+    annotator_widget.add_annotation_layer()
+    assert annotator_widget.annotation_layer_exists() is False
+
+
 def test_add_delete(annotator, polygons):
     layer = annotator.annotation_layer
     assert layer.nshapes == 1

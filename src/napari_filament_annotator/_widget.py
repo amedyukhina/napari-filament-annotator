@@ -194,9 +194,12 @@ class AnnotatorWidget(QWidget):
                 answer = self._confirm_adding_second_layer()
                 if answer == QMessageBox.No:
                     return
-            self.annotator = Annotator(self.viewer, img_layer, self.params)
-            self.annotation_layer = self.annotator.annotation_layer
-
+            if len(img_layer.data.shape) == 3:
+                self.annotator = Annotator(self.viewer, img_layer, self.params)
+                self.annotation_layer = self.annotator.annotation_layer
+            else:
+                show_info("Only 3D gray-scale images are currently supported! "
+                          rf"The current image has {len(img_layer.data.shape)} dimensions.")
         else:
             show_info("No images open! Please open an image first")
 
