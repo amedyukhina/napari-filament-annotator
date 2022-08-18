@@ -2,6 +2,9 @@
 Parameters for annotation display and refinement
 """
 
+import json
+import os
+
 import numpy as np
 
 
@@ -26,3 +29,19 @@ class Params():
         self.n_interp = n_interp
         self.end_coef = end_coef
         self.remove_corners = remove_corners
+
+    def save(self, filename):
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        params = dict(voxel_size_xy=self.scale[-1],
+                      voxel_size_z=self.scale[0],
+                      sigma_um=self.sigma[-1] * self.scale[-1],
+                      line_width=self.line_width,
+                      alpha=self.alpha,
+                      beta=self.beta,
+                      gamma=self.gamma,
+                      n_iter=self.n_iter,
+                      n_interp=self.n_interp,
+                      end_coef=self.end_coef,
+                      remove_corners=self.remove_corners)
+        with open(filename, 'w') as f:
+            json.dump(params, f)

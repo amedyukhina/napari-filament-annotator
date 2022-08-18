@@ -1,6 +1,7 @@
 """
 3D AnnotatorWidget Widget
 """
+import json
 import os
 from pathlib import Path
 
@@ -39,6 +40,7 @@ class AnnotatorWidget(QWidget):
         path = image_layer.source.path if image_layer is not None else None
         self.datapath = os.path.dirname(path) if path is not None else '.'
         self.filename = path[:-len(path.split('.')[-1]) - 1] + '.csv' if path is not None else 'annotations.csv'
+        self.param_filename = os.path.join(self.datapath, 'params.json') if path is not None else 'params.json'
         self.params = Params()
         self.set_params()
         self.setup_ui()
@@ -51,7 +53,7 @@ class AnnotatorWidget(QWidget):
         self.ac_parameters1()
         self.ac_parameters2()
 
-    def voxel_params(self, voxel_size_xy: float = 0.035, voxel_size_z: float = 0.140):
+    def voxel_params(self, voxel_size_xy: float = 0.035, voxel_size_z: float = 0.140, **_):
         """
         Specify voxel size.
 
@@ -65,7 +67,7 @@ class AnnotatorWidget(QWidget):
         self._set_scale([voxel_size_z, voxel_size_xy, voxel_size_xy])
         self.params.set_scale(self.scale)
 
-    def sigma_param(self, sigma_um: float = 0.05):
+    def sigma_param(self, sigma_um: float = 0.05, **_):
         """
         Specify voxel size.
 
@@ -76,7 +78,7 @@ class AnnotatorWidget(QWidget):
         """
         self.params.set_smoothing(sigma_um)
 
-    def display_params(self, line_width: float = 0.5):
+    def display_params(self, line_width: float = 0.5, **_):
         """
 
         Parameters
@@ -86,7 +88,7 @@ class AnnotatorWidget(QWidget):
         """
         self.params.set_linewidth(line_width)
 
-    def ac_parameters1(self, alpha: float = 0.01, beta: float = 0.1, gamma: float = 1):
+    def ac_parameters1(self, alpha: float = 0.01, beta: float = 0.1, gamma: float = 1, **_):
         """
 
         Parameters
@@ -101,7 +103,7 @@ class AnnotatorWidget(QWidget):
         self.params.set_coef(alpha=alpha, beta=beta, gamma=gamma)
 
     def ac_parameters2(self, n_iter: int = 1000, n_interp: int = 3, end_coef: float = 0.0,
-                       remove_corners: bool = True):
+                       remove_corners: bool = True, **_):
         """
 
         Parameters
@@ -141,6 +143,38 @@ class AnnotatorWidget(QWidget):
             self.add_annotation_layer()
         self.annotation_layer.add(data, shape_type='path', edge_color='green',
                                   edge_width=self.params.line_width)
+
+    def load_parameters(self, filename=Path('.')):
+        """
+
+        Parameters
+        ----------
+        filename : Path
+            Filename to load parameters
+
+        """
+        with open(filename, 'r') as f:
+            params = json.load(f)
+        self.voxel_params(**params)
+        self.sigma_param(**params)
+        self.display_params(**params)
+        self.ac_parameters1(**params)
+        self.ac_parameters2(**params)
+
+    def get_param_filename(self, filename=Path('.')):
+        """
+
+        Parameters
+        ----------
+        filename : Path
+            Filename to save parameters
+        """
+        self.param_filename = filename
+        self.save_parameters()
+
+    def save_parameters(self):
+        self.params.save(self.param_filename)
+        print(rf"Saved to: {self.param_filename}")
 
     def get_annotation_filename(self, filename=Path('.')):
         """
@@ -207,6 +241,14 @@ class AnnotatorWidget(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
+        # Load parameters from file
+        self._add_magic_function(magicgui(self.load_parameters, layout='vertical', auto_call=True,
+                                          filename={"mode": "r",
+                                                    "label": "Load existing parameters:",
+                                                    "filter": "*.json",
+                                                    "value": self.param_filename}),
+                                 layout)
+
         # Voxe size and annotation parameters
         l1 = QHBoxLayout()
         layout.addLayout(l1)
@@ -246,28 +288,41 @@ class AnnotatorWidget(QWidget):
         self._add_magic_function(magicgui(self.ac_parameters1, layout='vertical', auto_call=True), l4)
         self._add_magic_function(magicgui(self.ac_parameters2, layout='vertical', auto_call=True), l4)
 
-        # Open file dialog
+        # Save parameters
         l5 = QHBoxLayout()
         layout.addLayout(l5)
+        self._add_magic_function(magicgui(self.get_param_filename, layout='vertical', auto_call=True,
+                                          filename={"mode": "w",
+                                                    "label": "",
+                                                    "filter": "*.json",
+                                                    "value": self.param_filename}),
+                                 l5)
+        btn_save = QPushButton("Save parameters")
+        btn_save.clicked.connect(self.save_annotations)
+        l5.addWidget(btn_save)
+
+        # Load annotations
+        l6 = QHBoxLayout()
+        layout.addLayout(l6)
         self._add_magic_function(magicgui(self.load_annotations, layout='vertical', auto_call=True,
                                           filename={"mode": "r",
                                                     "label": "Load existing annotations:",
                                                     "filter": "*.csv",
                                                     "value": self.datapath}),
-                                 l5)
+                                 l6)
 
-        # Save file dialog
-        l6 = QHBoxLayout()
-        layout.addLayout(l6)
+        # Save annotations
+        l7 = QHBoxLayout()
+        layout.addLayout(l7)
         self._add_magic_function(magicgui(self.get_annotation_filename, layout='vertical', auto_call=True,
                                           filename={"mode": "w",
-                                                    "label": "Output CSV file:",
+                                                    "label": "",
                                                     "filter": "*.csv",
                                                     "value": self.filename}),
-                                 l6)
+                                 l7)
         btn_save = QPushButton("Save annotations")
         btn_save.clicked.connect(self.save_annotations)
-        l6.addWidget(btn_save)
+        l7.addWidget(btn_save)
 
     def _set_scale(self, scale):
         self.scale = scale
