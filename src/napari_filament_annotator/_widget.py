@@ -53,7 +53,7 @@ class AnnotatorWidget(QWidget):
         self.ac_parameters1()
         self.ac_parameters2()
 
-    def voxel_params(self, voxel_size_xy: float = 0.035, voxel_size_z: float = 0.140, **_):
+    def voxel_params(self, voxel_size_xy: float = 0.1, voxel_size_z: float = 0.1, **_):
         """
         Specify voxel size.
 
@@ -67,7 +67,7 @@ class AnnotatorWidget(QWidget):
         self._set_scale([voxel_size_z, voxel_size_xy, voxel_size_xy])
         self.params.set_scale(self.scale)
 
-    def sigma_param(self, sigma_um: float = 0.05, **_):
+    def sigma_param(self, sigma_um: float = 0.2, **_):
         """
         Specify voxel size.
 
@@ -293,7 +293,7 @@ class AnnotatorWidget(QWidget):
         layout.addLayout(l5)
         self._add_magic_function(magicgui(self.get_param_filename, layout='vertical', auto_call=True,
                                           filename={"mode": "w",
-                                                    "label": "",
+                                                    "label": "Save parameters:",
                                                     "filter": "*.json",
                                                     "value": self.param_filename}),
                                  l5)
@@ -316,7 +316,7 @@ class AnnotatorWidget(QWidget):
         layout.addLayout(l7)
         self._add_magic_function(magicgui(self.get_annotation_filename, layout='vertical', auto_call=True,
                                           filename={"mode": "w",
-                                                    "label": "",
+                                                    "label": "Save annotations:",
                                                     "filter": "*.csv",
                                                     "value": self.filename}),
                                  l7)
