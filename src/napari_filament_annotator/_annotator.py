@@ -29,6 +29,7 @@ class Annotator:
                                                   blending='additive'
                                                   )
         self.viewer = viewer
+        self.add_callbacks()
 
     def add_callbacks(self):
         self.annotation_layer.mouse_drag_callbacks.append(self._draw_polygon)
