@@ -1,6 +1,7 @@
 """
 3D AnnotatorWidget Widget
 """
+import argparse
 import json
 import os
 from pathlib import Path
@@ -53,7 +54,7 @@ class AnnotatorWidget(QWidget):
         self.ac_parameters1()
         self.ac_parameters2()
 
-    def voxel_params(self, voxel_size_xy: float = 0.1, voxel_size_z: float = 0.1, **_):
+    def voxel_params(self, voxel_size_xy: float = 0.1, voxel_size_z: float = 0.1):
         """
         Specify voxel size.
 
@@ -67,7 +68,7 @@ class AnnotatorWidget(QWidget):
         self._set_scale([voxel_size_z, voxel_size_xy, voxel_size_xy])
         self.params.set_scale(self.scale)
 
-    def sigma_param(self, sigma_um: float = 0.2, **_):
+    def sigma_param(self, sigma_um: float = 0.2):
         """
         Specify voxel size.
 
@@ -78,7 +79,7 @@ class AnnotatorWidget(QWidget):
         """
         self.params.set_smoothing(sigma_um)
 
-    def display_params(self, line_width: float = 0.5, **_):
+    def display_params(self, line_width: float = 0.5):
         """
 
         Parameters
@@ -88,7 +89,7 @@ class AnnotatorWidget(QWidget):
         """
         self.params.set_linewidth(line_width)
 
-    def ac_parameters1(self, alpha: float = 0.01, beta: float = 0.1, gamma: float = 1, **_):
+    def ac_parameters1(self, alpha: float = 0.01, beta: float = 0.1, gamma: float = 1):
         """
 
         Parameters
@@ -103,7 +104,7 @@ class AnnotatorWidget(QWidget):
         self.params.set_coef(alpha=alpha, beta=beta, gamma=gamma)
 
     def ac_parameters2(self, n_iter: int = 1000, n_interp: int = 3, end_coef: float = 0.0,
-                       remove_corners: bool = True, **_):
+                       remove_corners: bool = True):
         """
 
         Parameters
@@ -155,11 +156,18 @@ class AnnotatorWidget(QWidget):
         """
         with open(filename, 'r') as f:
             params = json.load(f)
-        self.voxel_params(**params)
-        self.sigma_param(**params)
-        self.display_params(**params)
-        self.ac_parameters1(**params)
-        self.ac_parameters2(**params)
+        params = argparse.Namespace(**params)
+        self.magic_voxel_params.voxel_size_xy.value = params.voxel_size_xy
+        self.magic_voxel_params.voxel_size_z.value = params.voxel_size_z
+        self.magic_sigma_param.sigma_um.value = params.sigma_um
+        self.magic_display_params.line_width.value = params.line_width
+        self.magic_ac_parameters1.alpha.value = params.alpha
+        self.magic_ac_parameters1.beta.value = params.beta
+        self.magic_ac_parameters1.gamma.value = params.gamma
+        self.magic_ac_parameters2.n_iter.value = params.n_iter
+        self.magic_ac_parameters2.n_interp.value = params.n_interp
+        self.magic_ac_parameters2.end_coef.value = params.end_coef
+        self.magic_ac_parameters2.remove_corners.value = params.remove_corners
 
     def get_param_filename(self, filename=Path('.')):
         """
@@ -251,10 +259,12 @@ class AnnotatorWidget(QWidget):
 
         # Voxe size and annotation parameters
         l1 = QHBoxLayout()
-        layout.addLayout(l1)
         l1.addWidget(QLabel("Image parameters"))
-        self._add_magic_function(magicgui(self.sigma_param, layout='vertical', auto_call=True), l1)
-        self._add_magic_function(magicgui(self.voxel_params, layout='horizontal', auto_call=True), layout)
+        layout.addLayout(l1)
+        self.magic_sigma_param = magicgui(self.sigma_param, layout='vertical', auto_call=True)
+        self._add_magic_function(self.magic_sigma_param, l1)
+        self.magic_voxel_params = magicgui(self.voxel_params, layout='vertical', auto_call=True)
+        self._add_magic_function(self.magic_voxel_params, layout)
 
         # Slider for masking out spindle
         l2 = QHBoxLayout()
@@ -279,14 +289,18 @@ class AnnotatorWidget(QWidget):
         l3 = QHBoxLayout()
         layout.addLayout(l3)
         l3.addWidget(QLabel("Display parameters"))
-        self._add_magic_function(magicgui(self.display_params, layout='vertical', auto_call=True), l3)
+        self.magic_display_params = magicgui(self.display_params, layout='vertical', auto_call=True)
+        self._add_magic_function(self.magic_display_params, l3)
 
         # Active contour parameters
         layout.addWidget(QLabel("Active contour parameters"))
         l4 = QHBoxLayout()
         layout.addLayout(l4)
-        self._add_magic_function(magicgui(self.ac_parameters1, layout='vertical', auto_call=True), l4)
-        self._add_magic_function(magicgui(self.ac_parameters2, layout='vertical', auto_call=True), l4)
+
+        self.magic_ac_parameters1 = magicgui(self.ac_parameters1, layout='vertical', auto_call=True)
+        self.magic_ac_parameters2 = magicgui(self.ac_parameters2, layout='vertical', auto_call=True)
+        self._add_magic_function(self.magic_ac_parameters1, l4)
+        self._add_magic_function(self.magic_ac_parameters2, l4)
 
         # Save parameters
         l5 = QHBoxLayout()
@@ -298,7 +312,7 @@ class AnnotatorWidget(QWidget):
                                                     "value": self.param_filename}),
                                  l5)
         btn_save = QPushButton("Save parameters")
-        btn_save.clicked.connect(self.save_annotations)
+        btn_save.clicked.connect(self.save_parameters)
         l5.addWidget(btn_save)
 
         # Load annotations
@@ -333,8 +347,8 @@ class AnnotatorWidget(QWidget):
             self.viewer.dims.ndisplay = 3
 
     def _add_magic_function(self, function, _layout):
-        self.viewer.layers.events.inserted.connect(function.reset_choices)
-        self.viewer.layers.events.removed.connect(function.reset_choices)
+        # self.viewer.layers.events.inserted.connect(function.reset_choices)
+        # self.viewer.layers.events.removed.connect(function.reset_choices)
         _layout.addWidget(function.native)
 
     def _confirm_adding_second_layer(self):

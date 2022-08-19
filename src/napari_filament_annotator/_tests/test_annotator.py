@@ -122,8 +122,8 @@ def test_param_io(annotator_widget, tmp_path):
     assert os.path.exists(fn)
     with open(fn, 'r') as f:
         params = json.load(f)
-    params['alpha'] = 100
+    params['voxel_size_xy'] = 2
     with open(fn, 'w') as f:
         json.dump(params, f)
     annotator_widget.load_parameters(fn)
-    assert annotator_widget.params.alpha == 100
+    assert annotator_widget.params.scale[-1] == 2
