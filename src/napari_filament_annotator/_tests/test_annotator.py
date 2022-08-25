@@ -79,7 +79,7 @@ def test_intersection(annotator, polygons):
 def test_params(annotator):
     # test that all parameters are set
     params = ['scale', 'sigma', 'line_width', 'alpha',
-              'beta', 'gamma', 'n_iter', 'n_interp', 'end_coef', 'remove_corners']
+              'beta', 'gamma', 'n_iter', 'n_interp', 'end_coef']
     for param in params:
         assert param in vars(annotator.params)
     assert len(annotator.params.scale) == len(annotator.params.sigma) == 3
