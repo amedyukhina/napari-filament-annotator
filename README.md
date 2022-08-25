@@ -1,4 +1,4 @@
-# napari-filament-annotator
+# 3D Filament Annotator
 
 [![License Apache Software License 2.0](https://img.shields.io/pypi/l/napari-filament-annotator.svg?color=green)](https://github.com/amedyukhina/napari-filament-annotator/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/napari-filament-annotator.svg?color=green)](https://pypi.org/project/napari-filament-annotator)
