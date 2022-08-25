@@ -164,7 +164,6 @@ class AnnotatorWidget(QWidget):
         self.magic_ac_parameters2.n_iter.value = params.n_iter
         self.magic_ac_parameters2.n_interp.value = params.n_interp
         self.magic_ac_parameters2.end_coef.value = params.end_coef
-        self.magic_ac_parameters2.remove_corners.value = params.remove_corners
 
     def get_param_filename(self, filename=Path('.')):
         """

@@ -40,7 +40,6 @@ class Params():
                       gamma=self.gamma,
                       n_iter=self.n_iter,
                       n_interp=self.n_interp,
-                      end_coef=self.end_coef,
-                      remove_corners=self.remove_corners)
+                      end_coef=self.end_coef)
         with open(filename, 'w') as f:
             json.dump(params, f)
