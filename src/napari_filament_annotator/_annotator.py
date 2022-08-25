@@ -36,6 +36,8 @@ class Annotator:
         self.annotation_layer.mouse_drag_callbacks.append(self._calculate_intersection)
         self.annotation_layer.bind_key('d', self.delete_the_last_shape)
         self.annotation_layer.bind_key('p', self.delete_the_last_point)
+        self.annotation_layer.bind_key('f', self.delete_the_first_filament_point)
+        self.annotation_layer.bind_key('l', self.delete_the_last_filament_point)
 
     def _draw_polygon(self, layer, event):
         """
@@ -174,6 +176,28 @@ class Annotator:
                 self.draw_polygon(layer)
             else:
                 self.delete_the_last_shape(layer, show_message=False)
+
+    def delete_the_last_filament_point(self, layer):
+        """Remove the last point in the last filament"""
+        if layer.nshapes > 1:
+            print('delete the last point')
+            print(layer.data[-1])
+            data = layer.data[-1][:-1]
+            print(data)
+            print(layer.data[:-1])
+            layer.data = layer.data[:-1] + [data]
+            print(layer.data)
+
+    def delete_the_first_filament_point(self, layer):
+        """Remove the first point in the last filament"""
+        if layer.nshapes > 1:
+            print('delete the first point')
+            print(layer.data[-1])
+            data = layer.data[-1][1:]
+            print(data)
+            print(layer.data[:-1])
+            layer.data = layer.data[:-1] + [data]
+            print(layer.data)
 
 
 def _get_bbox(shape):
