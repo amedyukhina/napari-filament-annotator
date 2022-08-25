@@ -7,10 +7,15 @@
 [![codecov](https://codecov.io/gh/amedyukhina/napari-filament-annotator/branch/main/graph/badge.svg)](https://codecov.io/gh/amedyukhina/napari-filament-annotator)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-filament-annotator)](https://napari-hub.org/plugins/napari-filament-annotator)
 
-Annotation of filament / curvilinear structures in 3D
+Annotation of filaments / curvilinear structures in 3D.
+
+----------------------------------
+
+Annotate the filament in two different projections, calculate intersection, and refine the filament position
+by active contour evolution.
 
 
-![demo](docs/demo.gif)
+![demo](docs/demo_09.gif)
 
 
 ## Installation
