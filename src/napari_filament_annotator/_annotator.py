@@ -180,24 +180,14 @@ class Annotator:
     def delete_the_last_filament_point(self, layer):
         """Remove the last point in the last filament"""
         if layer.nshapes > 1:
-            print('delete the last point')
-            print(layer.data[-1])
             data = layer.data[-1][:-1]
-            print(data)
-            print(layer.data[:-1])
             layer.data = layer.data[:-1] + [data]
-            print(layer.data)
 
     def delete_the_first_filament_point(self, layer):
         """Remove the first point in the last filament"""
         if layer.nshapes > 1:
-            print('delete the first point')
-            print(layer.data[-1])
             data = layer.data[-1][1:]
-            print(data)
-            print(layer.data[:-1])
             layer.data = layer.data[:-1] + [data]
-            print(layer.data)
 
 
 def _get_bbox(shape):
