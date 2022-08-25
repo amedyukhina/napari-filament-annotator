@@ -24,11 +24,10 @@ class Params():
         self.beta = beta
         self.gamma = gamma
 
-    def set_ac_parameters(self, n_iter=100, n_interp=5, end_coef=0.01, remove_corners=True):
+    def set_ac_parameters(self, n_iter=100, n_interp=5, end_coef=0.01):
         self.n_iter = n_iter
         self.n_interp = n_interp
         self.end_coef = end_coef
-        self.remove_corners = remove_corners
 
     def save(self, filename):
         os.makedirs(os.path.dirname(filename), exist_ok=True)

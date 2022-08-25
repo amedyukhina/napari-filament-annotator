@@ -118,7 +118,7 @@ class AnnotatorWidget(QWidget):
             Set to 0 to fix the end points.
         """
         self.params.set_ac_parameters(n_iter=n_iter, n_interp=n_interp,
-                                      end_coef=end_coef, remove_corners=remove_corners)
+                                      end_coef=end_coef)
 
     def load_annotations(self, filename=Path('.')):
         """
