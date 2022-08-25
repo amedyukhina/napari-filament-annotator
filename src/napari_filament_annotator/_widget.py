@@ -97,14 +97,13 @@ class AnnotatorWidget(QWidget):
         alpha : float
             Active contour weight for the first derivative
         beta : float
-            Active contour weight for the seconf derivative
+            Active contour weight for the second derivative
         gamma : float
             Active contour weight for the image contribution
         """
         self.params.set_coef(alpha=alpha, beta=beta, gamma=gamma)
 
-    def ac_parameters2(self, n_iter: int = 1000, n_interp: int = 3, end_coef: float = 0.0,
-                       remove_corners: bool = True):
+    def ac_parameters2(self, n_iter: int = 1000, n_interp: int = 3, end_coef: float = 0.0):
         """
 
         Parameters
@@ -113,12 +112,10 @@ class AnnotatorWidget(QWidget):
             Number of iterations of the active contour
             Width of the annotation lines in the viewer.
         n_interp : int
-            Number of points to interpolate between each annotated point
+            Number of points to interpolate between each pair of annotated point
         end_coef : float
             Coefficient (between 0 and 1) to scale the forces applied to the contour end points.
             Set to 0 to fix the end points.
-        remove_corners : bool
-            Remove corners at the start and end of filaments, which occur due to attraction to bright image parts
         """
         self.params.set_ac_parameters(n_iter=n_iter, n_interp=n_interp,
                                       end_coef=end_coef, remove_corners=remove_corners)

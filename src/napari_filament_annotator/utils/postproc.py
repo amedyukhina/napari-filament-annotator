@@ -27,7 +27,7 @@ def gradient(img, spacing=None):
 
 def snap_to_bright(snake, img=None, grad=None, spacing=None,
                    alpha=0.01, beta=0.1, gamma=1,
-                   n_iter=1000, end_coef=0.01, n_interp=5, remove_corners=True, **_):
+                   n_iter=1000, end_coef=0.01, n_interp=5, **_):
     """
     Snap the annotation to the brightest intensity and regularize the curve based on active contours.
 
@@ -56,8 +56,6 @@ def snap_to_bright(snake, img=None, grad=None, spacing=None,
         Set to 0 to fix the end points.
     n_interp : int
         Number of points to interpolate between each annotated point.
-    remove_corners : bool
-        Remove corners at the start and end of filaments, which occur due to attraction to bright image parts.
 
     Returns
     -------
@@ -79,8 +77,6 @@ def snap_to_bright(snake, img=None, grad=None, spacing=None,
     snake = _interpolate(snake, npoints=n_interp)  # interpolate between the points
     snake = _evolve_snake(snake, n_iter, grad, spacing, alpha, beta, gamma, end_coef)  # evolve the snake
 
-    if remove_corners:  # remove corners due to attraction to bright image parts
-        snake = _remove_corners(snake, n_interp + 1)
     return snake
 
 
