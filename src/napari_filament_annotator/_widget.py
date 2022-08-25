@@ -75,7 +75,7 @@ class AnnotatorWidget(QWidget):
         Parameters
         ----------
         sigma_um : flaot
-            Gaussian sigma (in microns) to smooth the image for identifying the brightest neighborhood point.
+            Gaussian sigma (in microns) to smooth the image for active contour refinement.
         """
         self.params.set_smoothing(sigma_um)
 
