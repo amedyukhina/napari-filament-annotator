@@ -9,17 +9,9 @@
 
 Annotation of filament / curvilinear structures in 3D
 
-----------------------------------
 
-This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
+![demo](docs/demo.gif)
 
-<!--
-Don't miss the full getting started guide to set up your new package:
-https://github.com/napari/cookiecutter-napari-plugin#getting-started
-
-and review the napari docs for plugin developers:
-https://napari.org/plugins/index.html
--->
 
 ## Installation
 
@@ -28,11 +20,13 @@ You can install `napari-filament-annotator` via [pip]:
     pip install napari-filament-annotator
 
 
-
 To install latest development version :
 
     pip install git+https://github.com/amedyukhina/napari-filament-annotator.git
 
+## Usage
+
+For detailed usage instructions, please refer to the [usage tutorial](docs/tutorial.md).
 
 ## Contributing
 
@@ -44,9 +38,33 @@ the coverage at least stays the same before you submit a pull request.
 Distributed under the terms of the [Apache Software License 2.0] license,
 "napari-filament-annotator" is free and open source software
 
+## Dependencies
+
+- [napari](https://github.com/napari/napari)
+- [scikit-image](https://scikit-image.org/)
+- [scikit-learn](https://github.com/scikit-learn/scikit-learn)
+- [NetworkX](https://networkx.org/documentation/stable/index.html)
+- [Geometry3D](https://github.com/GouMinghao/Geometry3D)
+
+
 ## Issues
 
 If you encounter any problems, please [file an issue] along with a detailed description.
+
+
+----------------------------------
+
+This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
+
+
+<!--
+Don't miss the full getting started guide to set up your new package:
+https://github.com/napari/cookiecutter-napari-plugin#getting-started
+
+and review the napari docs for plugin developers:
+https://napari.org/plugins/index.html
+-->
+
 
 [napari]: https://github.com/napari/napari
 [Cookiecutter]: https://github.com/audreyr/cookiecutter
