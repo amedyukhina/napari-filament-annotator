@@ -20,13 +20,20 @@ by active contour evolution.
 
 ## Installation
 
+### Install napari
+
+    pip install napari[all]
+
+### Install the filament annotator
+
+<!--
 You can install `napari-filament-annotator` via [pip]:
 
     pip install napari-filament-annotator
 
 
 To install latest development version :
-
+-->
     pip install git+https://github.com/amedyukhina/napari-filament-annotator.git
 
 ## Usage
