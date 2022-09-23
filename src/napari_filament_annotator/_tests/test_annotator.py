@@ -74,15 +74,22 @@ def test_intersection(annotator, polygons):
     annotator.calculate_intersection(layer)
     assert layer.nshapes == 2
     assert len(annotator.near_points) == len(annotator.far_points) == len(annotator.polygons) == 0
+    points = layer.data[-1].copy()
+    annotator.delete_the_last_filament_point(layer)
+    assert (points[:-1] == layer.data[-1]).all()
+    annotator.delete_the_first_filament_point(layer)
+    assert (points[1:-1] == layer.data[-1]).all()
 
 
-def test_params(annotator):
+def test_params(annotator, tmp_path):
     # test that all parameters are set
     params = ['scale', 'sigma', 'line_width', 'alpha',
               'beta', 'gamma', 'n_iter', 'n_interp', 'end_coef']
     for param in params:
         assert param in vars(annotator.params)
     assert len(annotator.params.scale) == len(annotator.params.sigma) == 3
+    annotator.params.save(os.path.join(tmp_path, 'params.json'))
+    assert os.path.exists(os.path.join(tmp_path, 'params.json'))
 
 
 def test_add_annotation_layer(annotator_widget):
