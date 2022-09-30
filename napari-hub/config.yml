@@ -1,0 +1,10 @@
+summary:  Annotation of filaments / curvilinear structures in 3D
+authors:
+  - name: Anna Medyukhina
+    orcid: 0000-0001-5268-713X
+project_urls:
+    Project Site: https://github.com/amedyukhina/napari-filament-annotator
+    Report Issues: https://github.com/amedyukhina/napari-filament-annotator/issues
+    Documentation: https://github.com/amedyukhina/napari-filament-annotator#README.md
+    User Support: https://github.com/amedyukhina/napari-filament-annotator/issues
+visibility: public
