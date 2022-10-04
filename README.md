@@ -1,5 +1,6 @@
 # 3D Filament Annotator
 
+[![DOI](https://zenodo.org/badge/513980347.svg)](https://zenodo.org/badge/latestdoi/513980347)
 [![License Apache Software License 2.0](https://img.shields.io/pypi/l/napari-filament-annotator.svg?color=green)](https://github.com/amedyukhina/napari-filament-annotator/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/napari-filament-annotator.svg?color=green)](https://pypi.org/project/napari-filament-annotator)
 [![Python Version](https://img.shields.io/pypi/pyversions/napari-filament-annotator.svg?color=green)](https://python.org)
