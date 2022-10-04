@@ -91,4 +91,6 @@ of the project.
 
 ## How to Cite
 
+Anna Medyukhina. (2022). amedyukhina/napari-filament-annotator: Version 0.1 (v0.1). Zenodo. 
+https://doi.org/10.5281/zenodo.7145278
 
