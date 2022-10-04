@@ -7,13 +7,9 @@
 [![codecov](https://codecov.io/gh/amedyukhina/napari-filament-annotator/branch/main/graph/badge.svg)](https://codecov.io/gh/amedyukhina/napari-filament-annotator)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-filament-annotator)](https://napari-hub.org/plugins/napari-filament-annotator)
 
-Annotation of filaments / curvilinear structures in 3D.
-
-----------------------------------
-
-Annotate the filament in two different projections, calculate intersection, and refine the filament position
-by active contour evolution.
-
+3D Filament Annotator is a tool for annotating filaments and other curvilinear structures in 3D. 
+The 3D annotation is done by annotating the filament in two different projections, 
+calculating intersection, and refining the filament position with active contours.
 
 ![demo](docs/demo_09.gif)
 
@@ -42,7 +38,10 @@ For detailed usage instructions, please refer to the [usage tutorial](docs/tutor
 
 ## Contributing
 
-Contributions are very welcome. Tests can be run with [tox], please ensure
+Contributions are very welcome both with regard to plugin functionality, and
+tips on using it and setting parameters. 
+
+Tests can be run with [tox], please ensure
 the coverage at least stays the same before you submit a pull request.
 
 ## License
