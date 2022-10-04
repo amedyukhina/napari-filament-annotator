@@ -1,0 +1,9 @@
+cff-version: 1.1.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Medyukhina
+    given-names: Anna
+    orcid: https://orcid.org/0000-0001-5268-713X
+title: amedyukhina/napari-filament-annotator: Version 0.1
+version: v0.1
+date-released: 2022-10-04
