@@ -6,7 +6,7 @@
 The 3D annotation is done by annotating the filament in two different projections, 
 calculating intersection, and refining the filament position with active contours.
 
-![demo](https://github.com/amedyukhina/napari-filament-annotator/blob/main/docs/demo_09.gif)
+![demo](https://raw.githubusercontent.com/amedyukhina/napari-filament-annotator/main/docs/demo_09.gif)
 
 ## Intended Audience & Supported Data
 
@@ -23,11 +23,11 @@ The plugin expects single-channel 3D images as input. Time-series data are not y
 
 **1. Open example image**
 
-![Open example image](https://github.com/amedyukhina/napari-filament-annotator/blob/main/docs/demo_01.png)
+![Open example image](https://raw.githubusercontent.com/amedyukhina/napari-filament-annotator/main/docs/demo_01.png)
 
 **2. Start the 3D annotator plugin**
 
-![Start 3D annotator plugin](https://github.com/amedyukhina/napari-filament-annotator/blob/main/docs/demo_02.png)
+![Start 3D annotator plugin](https://raw.githubusercontent.com/amedyukhina/napari-filament-annotator/main/docs/demo_02.png)
 
 **3. Adjust image parameters**
 
@@ -37,7 +37,7 @@ contour refinement of filament position.
 - Voxel size in xy and z
 - Sigma um: smoothing sigma, microns (or the same units as used for the voxel size)
 
-![Adjust image parameters](https://github.com/amedyukhina/napari-filament-annotator/blob/main/docs/demo_03.png)
+![Adjust image parameters](https://raw.githubusercontent.com/amedyukhina/napari-filament-annotator/main/docs/demo_03.png)
 
 **4. Add annotation layer**
 
@@ -46,7 +46,7 @@ Click the "Add annotation layer" button to add a new Shapes layer for annotation
 This step might take several seconds, depending on the image size, due to some filtering 
 that is performed behind the scenes.
 
-![Add annotation layer](https://github.com/amedyukhina/napari-filament-annotator/blob/main/docs/demo_05.png)
+![Add annotation layer](https://raw.githubusercontent.com/amedyukhina/napari-filament-annotator/main/docs/demo_05.png)
 
 **5. Annotate filaments**
 
@@ -64,7 +64,7 @@ Hot keys to edit the annotations:
 - `f`: delete the first point of the last added filament
 - `l`: delete the last point of the last added filament
 
-![Annotate](https://github.com/amedyukhina/napari-filament-annotator/blob/main/docs/demo_09.gif)
+![Annotate](https://raw.githubusercontent.com/amedyukhina/napari-filament-annotator/main/docs/demo_09.gif)
 
 **6. Save annotations**
 
@@ -72,7 +72,7 @@ Save final or intermediate annotations to a csv file.
 
 There is an option to load previously annotated filaments and continue the annotation.
 
-![Save annotations](https://github.com/amedyukhina/napari-filament-annotator/blob/main/docs/demo_10.png)
+![Save annotations](https://raw.githubusercontent.com/amedyukhina/napari-filament-annotator/main/docs/demo_10.png)
 
 ## Documentation 
 

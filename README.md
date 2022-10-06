@@ -12,7 +12,7 @@
 The 3D annotation is done by annotating the filament in two different projections, 
 calculating intersection, and refining the filament position with active contours.
 
-![demo](https://github.com/amedyukhina/napari-filament-annotator/blob/main/docs/demo_09.gif)
+![demo](https://raw.githubusercontent.com/amedyukhina/napari-filament-annotator/main/docs/demo_09.gif)
 
 
 ## Installation
